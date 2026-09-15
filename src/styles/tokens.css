@@ -1,0 +1,37 @@
+:root {
+  /* 色彩：暖米色底，分类各自的主色由数据给（--cat），朗读按钮固定橙色 */
+  --c-bg: #fff8ec;
+  --c-card: #ffffff;
+  --c-text: #3d2c1e;
+  /* 家长文案 / 返回键 / 齿轮：在米色底与白底上都 ≥ 4.5:1（原来的 #8a7a6d 不到 3.5:1），仍明显比正文淡 */
+  --c-text-light: #716254;
+  /*
+   * 朗读键 / 高亮底杠的橙：比 16 个分类色（都是 Material 300 档的浅色）深一档，
+   * 放在任何分类底色上都认得出是「那个按钮」；白色图标压在上面的对比约 3.1:1（≥ 3:1）。
+   * 原先的 #ff8a3d 与「动物」分类的 #ffb74d 太接近，且白字对比只有 2.4:1。
+   */
+  --c-accent: #ef6c00;
+  --c-line: #f0e6d8;
+  /* 控件边框 / 关闭态开关：比分隔线深一档，白底上也看得出边界 */
+  --c-line-strong: #cdbfae;
+
+  /* 圆角与阴影 */
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --shadow-card: 0 8px 24px rgba(61, 44, 30, 0.1);
+
+  /* 触屏点击目标：孩子用的 ≥ 96px，家长用的 ≥ 44px；相邻间隙 ≥ 12px */
+  --tap-kid: 96px;
+  --tap-adult: 44px;
+  --gap: 16px;
+
+  /* 圆体优先（Apple 上是 SF Rounded），其余系统退到常规无衬线 */
+  --font-main: ui-rounded, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+
+  /* 刘海 / 圆角屏安全区 */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+}

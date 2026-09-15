@@ -1,0 +1,59 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  /* 只有浅色一套，不跟随系统深色、也不让 Android 的「强制深色」反色（only 是退出自动深色的写法，老浏览器只认前一行） */
+  color-scheme: light;
+  color-scheme: only light;
+  /* 防误触：不缩放、不选字、不弹长按菜单、不下拉刷新、不回弹。
+     pan-x pan-y 而不是 manipulation：manipulation 明确允许双指捏合，这里只放行滚动 */
+  touch-action: pan-x pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-main);
+  color: var(--c-text);
+  background: var(--c-bg);
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  border: 0;
+  background: none;
+}

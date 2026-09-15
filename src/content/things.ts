@@ -1,0 +1,30 @@
+import type { Category } from './types'
+
+export const things: Category = {
+  id: 'things',
+  name: { zh: '日常用品', en: 'things' },
+  emoji: '🧸',
+  color: '#90a4ae',
+  cards: [
+    { id: 'cup', zh: '杯子', en: 'cup', emoji: '☕', sentence: { zh: '杯子里有水。', en: 'Water in the cup.' }, wiki: 'Mug', scene: 'cup of water', photos: ['Mug of Tea.JPG', 'Glass of water ouside.jpg'] },
+    { id: 'bowl', zh: '碗', en: 'bowl', emoji: '🥣', sentence: { zh: '碗里有饭。', en: 'Rice in the bowl.' }, wiki: 'Bowl', scene: 'bowl of rice', photos: ['A bowl of rice.jpg', 'Steamed rice in bowl 01.jpg'] },
+    { id: 'spoon', zh: '勺子', en: 'spoon', emoji: '🥄', sentence: { zh: '用勺子吃饭。', en: 'Eat with a spoon.' }, scene: 'child eating with spoon', photos: ['SpoonCollection.jpg', 'Ngaji.jpg'] },
+    { id: 'bottle', zh: '奶瓶', en: 'bottle', emoji: '🍼', sentence: { zh: '宝宝喝奶瓶。', en: 'The baby drinks from a bottle.' }, wiki: 'Baby bottle', scene: 'baby bottle feeding' },
+    { id: 'book', zh: '书', en: 'book', emoji: '📖', sentence: { zh: '我们看书吧。', en: 'Let\'s read a book.' }, scene: 'child reading book', photos: ['Child reading board books at a bookstore.jpg', 'Child reading book.jpg'] },
+    { id: 'pencil', zh: '铅笔', en: 'pencil', emoji: '✏️', sentence: { zh: '用铅笔画画。', en: 'Draw with a pencil.' }, scene: 'child drawing pencil', photos: ['2014-01-16-Hittegods (12009261426).jpg', 'Pencils hb.jpg'] },
+    { id: 'ball', zh: '球', en: 'ball', emoji: '⚽', sentence: { zh: '我们踢球吧。', en: 'Let\'s kick the ball.' }, wiki: 'Ball', scene: 'child kicking ball', photos: ['Ball, പന്ത്.JPG', 'Bandy ball (Orange).JPG'] },
+    { id: 'balloon', zh: '气球', en: 'balloon', emoji: '🎈', sentence: { zh: '气球飞上天。', en: 'The balloon flies up.' }, wiki: 'Toy balloon', scene: 'balloons sky', photos: ['Young Afghan boy with pink balloon.jpg', 'Balloon boy 2.jpg'] },
+    { id: 'teddy-bear', zh: '小熊', en: 'teddy bear', emoji: '🧸', sentence: { zh: '我抱着小熊。', en: 'I hug my teddy bear.' }, scene: 'child hugging teddy bear', photos: ['2023 Pluszowy miś.jpg', 'Teddy Bear - 13.jpg'] },
+    { id: 'phone', zh: '手机', en: 'phone', emoji: '📱', sentence: { zh: '手机响了。', en: 'The phone is ringing.' }, wiki: 'Smartphone', scene: 'smartphone', photos: ['Smartphone Use.jpg', 'Smartphone in Hand (Unsplash).jpg'] },
+    { id: 'umbrella', zh: '雨伞', en: 'umbrella', emoji: '☂️', sentence: { zh: '下雨打雨伞。', en: 'Umbrella for the rain.' }, scene: 'umbrella rain', photos: ['Les Parapluies de Viborg.jpg', 'A Madrasa Child Leaping from a Train with an Umbrella in the Rain, Bangladesh.jpg'] },
+    { id: 'toothbrush', zh: '牙刷', en: 'toothbrush', emoji: '🪥', sentence: { zh: '用牙刷刷牙。', en: 'Brush with a toothbrush.' }, scene: 'toothbrush', photos: ['Toothpasteonbrush.jpg', 'Nepalese child with Down Syndrome practicing oral health during an oral health promotion activity.jpg'] },
+    { id: 'soap', zh: '肥皂', en: 'soap', emoji: '🧼', sentence: { zh: '用肥皂洗手。', en: 'Wash hands with soap.' }, scene: 'washing hands soap', photos: ['Soap in blue dish.JPG', 'Washing hands with soap (4).jpg'] },
+    { id: 'key', zh: '钥匙', en: 'key', emoji: '🔑', sentence: { zh: '钥匙开门。', en: 'The key opens the door.' }, wiki: 'Key (lock)', scene: 'key door', photos: ['Door key from lock type BKS Janus on keyring from company O&K (Orenstein & Koppel).jpg', 'Closeup of a man\'s hand inserting a key into the door lock of a gate.jpg'] },
+    { id: 'scissors', zh: '剪刀', en: 'scissors', emoji: '✂️', sentence: { zh: '剪刀剪纸。', en: 'Scissors cut paper.' }, scene: 'scissors cutting paper', photos: ['Papercutting Art.jpg', 'Scissors collection.jpg'] },
+    { id: 'backpack', zh: '背包', en: 'backpack', emoji: '🎒', sentence: { zh: '背上小背包。', en: 'Put on your backpack.' }, scene: 'child backpack', photos: ['Boy-in-brown-hoodie-carrying-red-backpack-while-walking-on-207697.jpg', 'Fjallraven, OutDoor 2018, Friedrichshafen (1X7A0438).jpg'] },
+    { id: 'glasses', zh: '眼镜', en: 'glasses', emoji: '👓', sentence: { zh: '爷爷戴眼镜。', en: 'Grandpa wears glasses.' }, scene: 'old man glasses', photos: ['2023 Okulary korekcyjne.jpg', 'Reading-Glasses.jpg'] },
+    { id: 'watch', zh: '手表', en: 'watch', emoji: '⌚', sentence: { zh: '手表滴答滴答。', en: 'The watch goes tick tock.' }, scene: 'wristwatch', photos: ['Mondaine Classic A669.30008.16SBO watch.jpg', 'Junghans Funkuhr um 2005 (2022-01-30 Sp).JPG'] },
+    { id: 'chopsticks', zh: '筷子', en: 'chopsticks', emoji: '🥢', sentence: { zh: '用筷子吃饭。', en: 'Eat with chopsticks.' }, wiki: 'Chopsticks', scene: 'child eating with chopsticks', photos: ['Family eating a meal (4).jpg', 'Comment tenir des baguettes - Troisième étape.JPG'] },
+    { id: 'crayon', zh: '蜡笔', en: 'crayon', emoji: '🖍️', sentence: { zh: '用蜡笔画画。', en: 'Draw with crayons.' }, wiki: 'Crayon', scene: 'child drawing with crayons' },
+  ],
+}

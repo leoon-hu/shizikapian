@@ -1,0 +1,29 @@
+# 系统 / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# 依赖与构建产物（各子项目各自装、各自 build）
+node_modules/
+dist/
+dev-dist/
+*.log
+
+# 本机环境
+.env
+.env.*
+
+# 音色试听产物（npm run audio -- --audition）
+.audition/
+
+# 审片用的候选与拼图（npm run photos -- --candidates / --sheet）
+.photos-review/
+
+# 构建前由 scripts/seo.ts 生成（含站点地址，随环境变）
+/public/cards.html
+/public/robots.txt
+/public/sitemap.xml
+
+# 文档与部署脚本只留在本机（和 ai+word / pinyinxuexiji 一样，仓库要公开）
+/docs/
+/deploy/

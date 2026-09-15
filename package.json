@@ -1,0 +1,46 @@
+{
+  "name": "shizikapian",
+  "private": true,
+  "license": "MIT",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "tsx scripts/seo.ts",
+    "dev": "vite",
+    "prebuild": "tsx scripts/seo.ts",
+    "build": "vue-tsc --noEmit && vite build",
+    "seo": "tsx scripts/seo.ts",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "images": "tsx scripts/images.ts",
+    "audio": "tsx scripts/audio.ts",
+    "icons": "tsx scripts/icons.ts",
+    "photos": "tsx scripts/photos.ts"
+  },
+  "dependencies": {
+    "vue": "^3.5.42",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "@resvg/resvg-js": "^2.6.2",
+    "@twemoji/svg": "^15.0.0",
+    "@types/node": "^26.1.0",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "mpg123-decoder": "^1.0.3",
+    "msedge-tts": "^2.0.7",
+    "sharp": "^0.35.4",
+    "tsx": "^4.23.13",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.0",
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^5.0.0",
+    "vue-tsc": "^3.3.11",
+    "workbox-core": "^7.4.1",
+    "workbox-precaching": "^7.4.1",
+    "workbox-range-requests": "^7.4.1",
+    "workbox-routing": "^7.4.1"
+  }
+}
