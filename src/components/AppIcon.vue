@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** 界面里用到的几个图标，内联 SVG，颜色跟随 currentColor */
-defineProps<{ name: 'prev' | 'next' | 'speaker' | 'back' | 'gear' | 'quiz' | 'replay' }>()
+defineProps<{ name: 'prev' | 'next' | 'speaker' | 'back' | 'gear' | 'quiz' | 'replay' | 'share' | 'close' }>()
 </script>
 
 <template>
@@ -23,6 +23,17 @@ defineProps<{ name: 'prev' | 'next' | 'speaker' | 'back' | 'gear' | 'quiz' | 're
     <g v-else-if="name === 'replay'" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M38 24 A14 14 0 1 1 30 11.5" />
       <path d="M31 4 L31 13 L22 13" fill="currentColor" stroke="none" />
+    </g>
+    <!-- iOS 的「分享」：方框带向上箭头，安装提示条里让家长认出 Safari 上那个按钮 -->
+    <g v-else-if="name === 'share'" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M16 18 H12 V42 H36 V18 H32" />
+      <path d="M24 30 V6" />
+      <path d="M16 13 L24 5 L32 13" />
+    </g>
+    <!-- 关闭：给家长用的 ✕ -->
+    <g v-else-if="name === 'close'" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round">
+      <path d="M12 12 L36 36" />
+      <path d="M36 12 L12 36" />
     </g>
     <g v-else-if="name === 'gear'" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round">
       <circle cx="24" cy="24" r="6" />

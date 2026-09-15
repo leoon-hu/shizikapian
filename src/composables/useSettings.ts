@@ -6,7 +6,7 @@ import { categories } from '@/content'
 const STORAGE_KEY = 'shizikapian:v1'
 
 export interface Settings {
-  version: 4
+  version: 5
   /** 卡片显示 中文 / 英文 / 中英文，朗读跟随 */
   display: DisplayMode
   /** 切到新卡片时自动朗读；关掉后只有点「再听一遍」或点图才读 */
@@ -19,9 +19,20 @@ export interface Settings {
   sentences: boolean
   /** 卡片页显示小测验入口（P11） */
   quiz: boolean
+  /** 首页「安装到手机」提示条（C5）在这个时间（ms）之前不显示：0 = 一直显示；关掉 = 现在 + 7 天；装好了 = INSTALL_HINT_FOREVER */
+  installHintMutedUntil: number
 }
 
-const DEFAULTS: Settings = { version: 4, display: 'zh', autoSpeak: true, hiddenCategories: [], settingsSeen: false, sentences: true, quiz: true }
+const DEFAULTS: Settings = {
+  version: 5,
+  display: 'zh',
+  autoSpeak: true,
+  hiddenCategories: [],
+  settingsSeen: false,
+  sentences: true,
+  quiz: true,
+  installHintMutedUntil: 0,
+}
 const DISPLAY_MODES: DisplayMode[] = ['zh', 'en', 'both']
 
 /** 只留下内容里还存在的分类 id：分类改名 / 删掉后旧设置不会留下幽灵项 */
@@ -31,20 +42,24 @@ function sanitizeHidden(raw: unknown): string[] {
   return raw.filter((id): id is string => typeof id === 'string' && known.has(id))
 }
 
-/** v1 没有 hiddenCategories / settingsSeen，v2 没有 sentences，v3 没有 quiz：缺的字段一律补默认值，所以升版本与「字段损坏」走同一条路 */
+/** v1 没有 hiddenCategories / settingsSeen，v2 没有 sentences，v3 没有 quiz，v4 没有 installHintMutedUntil：缺的字段一律补默认值，所以升版本与「字段损坏」走同一条路 */
 function load(): Settings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return { ...DEFAULTS }
     const parsed = JSON.parse(raw) as Partial<Settings>
     return {
-      version: 4,
+      version: 5,
       display: DISPLAY_MODES.includes(parsed.display as DisplayMode) ? (parsed.display as DisplayMode) : DEFAULTS.display,
       autoSpeak: typeof parsed.autoSpeak === 'boolean' ? parsed.autoSpeak : DEFAULTS.autoSpeak,
       hiddenCategories: sanitizeHidden(parsed.hiddenCategories),
       settingsSeen: typeof parsed.settingsSeen === 'boolean' ? parsed.settingsSeen : DEFAULTS.settingsSeen,
       sentences: typeof parsed.sentences === 'boolean' ? parsed.sentences : DEFAULTS.sentences,
       quiz: typeof parsed.quiz === 'boolean' ? parsed.quiz : DEFAULTS.quiz,
+      installHintMutedUntil:
+        typeof parsed.installHintMutedUntil === 'number' && Number.isFinite(parsed.installHintMutedUntil) && parsed.installHintMutedUntil >= 0
+          ? parsed.installHintMutedUntil
+          : DEFAULTS.installHintMutedUntil,
     }
   } catch {
     return { ...DEFAULTS }

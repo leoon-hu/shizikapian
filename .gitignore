@@ -27,3 +27,6 @@ dev-dist/
 # 文档与部署脚本只留在本机（和 ai+word / pinyinxuexiji 一样，仓库要公开）
 /docs/
 /deploy/
+
+# Bing 站长平台的站点验证文件，放在 public/ 随构建进 dist/（部署用 rsync --delete，单独传上去会被删掉）
+BingSiteAuth.xml

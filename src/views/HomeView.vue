@@ -7,6 +7,7 @@ import { useSpeaker } from '@/composables/useSpeaker'
 import { useLongPress } from '@/composables/useLongPress'
 import CategoryTile from '@/components/CategoryTile.vue'
 import AppIcon from '@/components/AppIcon.vue'
+import InstallHint from '@/components/InstallHint.vue'
 
 const router = useRouter()
 const settings = useSettings()
@@ -65,6 +66,8 @@ const RING_C = 2 * Math.PI * RING_R
         </button>
       </div>
     </header>
+    <!-- 给家长的「安装到手机」提示条（C5）：没装到主屏幕时才有，可关 -->
+    <InstallHint />
     <div class="home__grid">
       <CategoryTile v-for="cat in visible" :key="cat.id" :category="cat" @pick="enter(cat)" />
     </div>

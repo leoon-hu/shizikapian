@@ -4,6 +4,8 @@ import router from '@/router'
 import { useSpeaker } from '@/composables/useSpeaker'
 import App from '@/App.vue'
 import { usePwa } from '@/composables/usePwa'
+import { useSettings } from '@/composables/useSettings'
+import { INSTALL_HINT_FOREVER } from '@/composables/installHint'
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 
@@ -19,10 +21,15 @@ document.addEventListener('gesturechange', block, { passive: false })
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault() }, { passive: false })
 
 const pwa = usePwa()
-// Android Chrome 的安装提示：先拦下不让浏览器自己弹（零干扰），存起来给设置页的「安装到主屏幕」按钮
+// Android Chrome 的安装提示：先拦下不让浏览器自己弹（时机与文案自己控制），存起来给首页提示条（C5）与设置页的「安装」按钮
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault()
   pwa.installPrompt.value = e
+})
+// 装好了：事件作废，首页的安装提示条永不再出现（这台浏览器里的存储和装好的应用是同一份）
+window.addEventListener('appinstalled', () => {
+  pwa.installPrompt.value = null
+  useSettings().installHintMutedUntil = INSTALL_HINT_FOREVER
 })
 
 createApp(App).use(router).mount('#app')

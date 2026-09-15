@@ -7,8 +7,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 /**
- * 模块级单例：安装与离线状态，给家长设置页的「离线与安装」一行用。
- * 写入方在 main.ts（注册 SW 的回调、SW 发来的进度、beforeinstallprompt），这里只放状态与 install()。
+ * 模块级单例：安装与离线状态，给首页的安装提示条（C5）与家长设置页的「离线与安装」一行用。
+ * 写入方在 main.ts（注册 SW 的回调、SW 发来的进度、beforeinstallprompt / appinstalled），这里只放状态与 install()。
  */
 
 /**
@@ -21,13 +21,17 @@ const offlineState = ref<'unsupported' | 'installing' | 'ready' | 'failed'>(
 )
 /** 下载进度（SW 每下完一批就发一次），没收到过为 null */
 const progress = ref<{ done: number; total: number } | null>(null)
-/** Android Chrome 的安装提示事件；用过或不支持为 null，设置页据此显示 / 隐藏「安装到主屏幕」 */
+/** Android Chrome 的安装提示事件；用过、装好了或不支持为 null，首页提示条与设置页据此显示 / 隐藏「安装」按钮 */
 const installPrompt = ref<Event | null>(null)
 
 const ua = typeof navigator !== 'undefined' ? navigator.userAgent : ''
 /** iPadOS 13 起 UA 冒充 Mac，靠触点数认出来；iPad 的 Safari 分享按钮在右上角，指引要分开写 */
 const isIPad = /iPad/.test(ua) || (typeof navigator !== 'undefined' && navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 const isIOS = /iPhone|iPod/.test(ua) || isIPad
+/** 微信 / QQ 内置浏览器：没有 Service Worker、分享菜单里也没有「添加到主屏幕」，只能教家长去浏览器打开 */
+const isInApp = /MicroMessenger|\bQQ\//.test(ua)
+/** 主要输入是触屏（手机 / 平板）；电脑浏览器不提示安装 */
+const isTouch = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches
 
 /** 已从主屏幕打开（manifest 是 fullscreen，iOS 老版本只认 navigator.standalone） */
 const isStandalone =
@@ -51,19 +55,22 @@ async function detectCached() {
 }
 if (typeof navigator !== 'undefined') void detectCached()
 
-/** 家长点「安装到主屏幕」：弹系统安装框，无论装不装事件都只能用一次，用完清掉让按钮消失 */
-async function install() {
+/**
+ * 家长点「安装」：弹系统安装框，无论装不装事件都只能用一次，用完清掉让按钮消失（装成了 main.ts 还会收到 appinstalled）。
+ * 返回家长在系统框里的选择；关掉系统框 / 出错都算 dismissed
+ */
+async function install(): Promise<'accepted' | 'dismissed'> {
   const e = installPrompt.value as BeforeInstallPromptEvent | null
   installPrompt.value = null
-  if (!e) return
+  if (!e) return 'dismissed'
   try {
     await e.prompt()
-    await e.userChoice
+    return (await e.userChoice).outcome
   } catch {
-    /* 用户关掉了系统框 */
+    return 'dismissed'
   }
 }
 
 export function usePwa() {
-  return { offlineState, progress, installPrompt, isStandalone, isIOS, isIPad, install }
+  return { offlineState, progress, installPrompt, isStandalone, isIOS, isIPad, isInApp, isTouch, install }
 }
