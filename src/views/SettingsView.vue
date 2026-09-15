@@ -7,6 +7,8 @@ import { useSettings } from '@/composables/useSettings'
 import { useSpeaker } from '@/composables/useSpeaker'
 import { usePwa } from '@/composables/usePwa'
 import AppIcon from '@/components/AppIcon.vue'
+import InstallSteps from '@/components/InstallSteps.vue'
+import type { InstallHintKind } from '@/composables/installHint'
 
 const router = useRouter()
 const settings = useSettings()
@@ -33,6 +35,19 @@ function pickDisplay(mode: DisplayMode) {
   settings.display = mode
   if (sampleCard) speaker.speakCard(sampleCard)
 }
+
+/**
+ * 「离线与安装」的安装部分（P7）：拿到安装事件给「安装到主屏幕」按钮，其它环境给「查看步骤」，
+ * 弹与首页提示条（C5）相同的步骤面板；判断顺序与 C5 一致（内置浏览器先于 iOS）
+ */
+const installKind = computed<InstallHintKind | null>(() => {
+  if (pwa.isStandalone) return null
+  if (pwa.installPrompt.value) return 'prompt'
+  if (pwa.isInApp) return 'inapp'
+  if (pwa.isIOS) return 'ios'
+  return 'menu'
+})
+const stepsOpen = ref(false)
 
 /** 离线包状态一行（P7）：下载中带百分比，家长知道是在下而不是卡住了 */
 const offlineText = computed(() => {
@@ -189,15 +204,18 @@ function back() {
         <span class="status__dot" :class="{ 'status__dot--ok': pwa.offlineState.value === 'ready' }" />
         {{ offlineText }}
       </p>
-      <p v-if="pwa.isStandalone" class="group__hint">已安装到主屏幕。</p>
-      <button v-else-if="pwa.installPrompt.value" type="button" class="install" @click="pwa.install()">安装到主屏幕</button>
-      <p v-else-if="pwa.isIOS" class="group__hint">
-        在 Safari 里点「分享」按钮（方框带向上箭头：iPhone 在底部，iPad 在右上角）→「添加到主屏幕」，以后从主屏幕图标打开就是全屏、离线的。
-        主屏幕里的是独立的一份，设置要在那里重新选（离线包可能也要再下一次）；只在 Safari 里用的话，一周不打开会被系统清掉。
-      </p>
-      <p v-else class="group__hint">在浏览器菜单里选「添加到主屏幕」（或「安装应用」），以后从桌面图标打开就是全屏、离线的。</p>
+      <p v-if="!installKind" class="group__hint">已安装到主屏幕。</p>
+      <button v-else-if="installKind === 'prompt'" type="button" class="install" @click="pwa.install()">安装到主屏幕</button>
+      <template v-else>
+        <p class="group__hint">装到主屏幕后从桌面图标打开就是全屏、离线的，孩子自己就能打开。</p>
+        <button type="button" class="install" @click="stepsOpen = true">查看步骤</button>
+        <p v-if="installKind === 'ios'" class="group__hint">
+          主屏幕里的是独立的一份，设置要在那里重新选（离线包可能也要再下一次）；只在 Safari 里用的话，一周不打开会被系统清掉。
+        </p>
+      </template>
       <p class="group__hint">没有声音？先把音量键调大（iPhone / iPad 的静音拨键不影响本应用）。</p>
     </section>
+    <InstallSteps v-if="stepsOpen && installKind && installKind !== 'prompt'" :kind="installKind" @close="stepsOpen = false" />
 
     <section class="group">
       <h2 class="group__title">显示哪些分类</h2>

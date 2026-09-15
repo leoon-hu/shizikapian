@@ -19,7 +19,7 @@ export interface Settings {
   sentences: boolean
   /** 卡片页显示小测验入口（P11） */
   quiz: boolean
-  /** 首页「安装到手机」提示条（C5）在这个时间（ms）之前不显示：0 = 一直显示；关掉 = 现在 + 7 天；装好了 = INSTALL_HINT_FOREVER */
+  /** 首页「安装 识字卡片」提示条（C5）在这个时间（ms）之前不显示：0 = 一直显示；关掉 / 拒绝 = 现在 + 3 天；装好了 = INSTALL_HINT_FOREVER */
   installHintMutedUntil: number
 }
 

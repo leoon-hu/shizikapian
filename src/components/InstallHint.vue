@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useSettings } from '@/composables/useSettings'
 import { usePwa } from '@/composables/usePwa'
 import { INSTALL_HINT_SNOOZE_MS, installHintKind } from '@/composables/installHint'
+import InstallSteps from '@/components/InstallSteps.vue'
 import AppIcon from '@/components/AppIcon.vue'
 
 /**
- * 首页的「安装到手机」提示条（C5）：给家长看的一条静态元素，不是弹窗、不出声、不遮方砖。
- * 没从主屏幕打开时从第一次打开就显示；关掉 7 天后再出现；装好了永不出现。
+ * 首页的「安装 识字卡片」提示条（C5）：给家长看的一条静态元素，不是弹窗、不出声、不遮方砖。
+ * 四个站同一套规则与结构：图标 + 粗体标题 + 一句说明 + 主按钮（安装 / 怎么做）+ ×。
+ * 没从主屏幕打开时从第一次打开就显示（随页面一起画出来，不延时冒出，免得方砖跳动）；关掉 / 拒绝 3 天后再出现；装好了永不出现。
  */
 const settings = useSettings()
 const pwa = usePwa()
+const sheet = ref(false)
+/** 每次进首页重新取当前时间（Date.now() 不是响应式的）：静默期到了就重新出现 */
+const now = ref(Date.now())
+onMounted(() => (now.value = Date.now()))
 
-/** 每次进首页重新算一次（Date.now() 不是响应式的，但组件每次挂载都会重建这个 computed） */
+const iconSrc = `${import.meta.env.BASE_URL}icons/icon-192.png`
+
 const kind = computed(() =>
   installHintKind(
     {
@@ -23,49 +30,54 @@ const kind = computed(() =>
       hasPrompt: pwa.installPrompt.value !== null,
     },
     settings.installHintMutedUntil,
-    Date.now(),
+    now.value,
   ),
 )
 
-const title = computed(() => (pwa.isIPad ? '安装到 iPad' : '安装到手机'))
-
 function dismiss() {
+  sheet.value = false
   settings.installHintMutedUntil = Date.now() + INSTALL_HINT_SNOOZE_MS
 }
 
-/** 家长在系统安装框里选了「不了」也当关掉：同一屏上别马上换成「浏览器菜单」那句接着劝 */
-async function install() {
-  if ((await pwa.install()) === 'dismissed') dismiss()
+/** 「安装」弹系统安装框（pwa.install 会按结果记永久 / 3 天）；其它环境打开步骤面板 */
+async function primary() {
+  if (kind.value === 'prompt') await pwa.install()
+  else sheet.value = true
 }
 </script>
 
 <template>
-  <aside v-if="kind" class="hint" role="note" aria-label="安装提示">
+  <aside v-if="kind" class="hint" role="note" aria-label="安装 识字卡片">
+    <img class="hint__icon" :src="iconSrc" alt="" draggable="false" />
     <div class="hint__body">
-      <strong class="hint__title">{{ title }}</strong>
-      <!-- 写在一行里：模板里的换行会变成多余的空格 -->
-      <span class="hint__text">
-        全屏打开、没有网也能用。<template v-if="kind === 'ios'">Safari 里点{{ pwa.isIPad ? '右上角' : '底部' }}的 <AppIcon name="share" class="hint__share" /> →「添加到主屏幕」</template><template v-else-if="kind === 'inapp'">点右上角「···」→「在浏览器打开」，再安装</template><template v-else-if="kind === 'menu'">浏览器菜单 →「添加到主屏幕」</template>
-      </span>
+      <strong class="hint__title">安装 识字卡片</strong>
+      <span class="hint__text">全屏打开，没有网也能用</span>
     </div>
-    <button v-if="kind === 'prompt'" type="button" class="hint__install" @click="install">安装</button>
+    <button type="button" class="hint__install" @click="primary">{{ kind === 'prompt' ? '安装' : '怎么做' }}</button>
     <button type="button" class="hint__close" aria-label="关闭安装提示" @click="dismiss">
       <AppIcon name="close" />
     </button>
   </aside>
+  <InstallSteps v-if="sheet && kind && kind !== 'prompt'" :kind="kind" @close="dismiss" />
 </template>
 
 <style scoped>
 .hint {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: var(--gap);
-  padding: 8px 4px 8px 14px;
+  padding: 8px 4px 8px 12px;
   background: var(--c-card);
   border: 1px solid var(--c-line);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
+}
+.hint__icon {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
 }
 .hint__body {
   flex: 1 1 auto;
@@ -84,17 +96,11 @@ async function install() {
   font-size: 13px;
   color: var(--c-text-light);
 }
-.hint__share {
-  display: inline-block;
-  vertical-align: -0.2em;
-  font-size: 1.15em;
-  color: var(--c-text);
-}
-/* 家长用的按钮：≥ 44px；「安装」是橙色药丸，和设置页的一致 */
+/* 家长用的按钮：≥ 44px；橙色药丸，和设置页的一致 */
 .hint__install {
   flex: none;
   min-height: 44px;
-  padding: 0 18px;
+  padding: 0 14px;
   border-radius: 22px;
   background: var(--c-accent);
   color: #fff;
@@ -107,7 +113,7 @@ async function install() {
 }
 .hint__close {
   flex: none;
-  width: var(--tap-adult);
+  width: 40px;
   height: var(--tap-adult);
   display: grid;
   place-items: center;
