@@ -7,6 +7,13 @@
 
 使用者是不识字、手指点不准、注意力只有几分钟的孩子：所有孩子要用的操作都是大图标 + 颜色 + 声音，文字只是给旁边家长看的；不计时、不计分、不判对错，只有「看、听、说」。
 
+<p align="center">
+  <img src="screenshots/home.png" width="24%" alt="首页：分类方砖">
+  <img src="screenshots/card.png" width="24%" alt="卡片：照片 + 插画 + 词 + 例句">
+  <img src="screenshots/card-fruit.png" width="24%" alt="卡片：水果">
+  <img src="screenshots/quiz.png" width="24%" alt="小测验：听音找图">
+</p>
+
 ```bash
 npm install
 npm run dev          # http://localhost:5173
@@ -19,6 +26,7 @@ npm run photos       # 重新挑照片 → public/photos/（见下文）
 npm run audio        # 重新合成发音 → public/audio/（见下文）
 npm run icons        # 重新渲染 PWA 图标与分享预览图 → public/icons/
 npm run seo          # 生成 public/cards.html（不用 JS 的全部卡片清单页）、robots.txt、sitemap.xml；build / dev 前会自动跑
+npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触摸）截 README 用的预览图到 screenshots/
 ```
 
 ## 孩子怎么用
@@ -102,7 +110,7 @@ src/
   components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon
   styles/               tokens.css 设计变量；base.css 防误触与全局样式
   sw.ts                 自写的 Service Worker：预缓存全部资源 + Range 请求（iOS 才播得出缓存里的 mp3）
-scripts/                images / photos / audio / icons / seo 五个生成脚本
+scripts/                images / photos / audio / icons / seo 五个生成脚本，screenshots.mjs 截 README 预览图 → screenshots/
 public/                 images/ photos/ audio/ icons/ 生成的素材
 ```
 
