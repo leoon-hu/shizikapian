@@ -8,6 +8,7 @@ import { useLongPress } from '@/composables/useLongPress'
 import CategoryTile from '@/components/CategoryTile.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import InstallHint from '@/components/InstallHint.vue'
+import { SISTER_SITES } from '@/sites'
 
 const router = useRouter()
 const settings = useSettings()
@@ -71,6 +72,11 @@ const RING_C = 2 * Math.PI * RING_R
     <div class="home__grid">
       <CategoryTile v-for="cat in visible" :key="cat.id" :category="cat" @pick="enter(cat)" />
     </div>
+    <!-- 页脚「更多应用」（C6）：给家长看的小字，链到同一作者的另外三个站；在方砖下面，要滚到底才看到 -->
+    <footer class="home__foot">
+      <span>更多应用</span>
+      <a v-for="s in SISTER_SITES" :key="s.url" :href="s.url" target="_blank" rel="noopener">{{ s.name }}<small>{{ s.desc }}</small></a>
+    </footer>
   </main>
 </template>
 
@@ -149,6 +155,31 @@ const RING_C = 2 * Math.PI * RING_R
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--gap);
   padding-bottom: var(--gap);
+}
+.home__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0 14px;
+  padding-bottom: 8px;
+  font-size: 13px;
+  color: var(--c-text-light);
+}
+.home__foot a {
+  min-height: var(--tap-adult);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 2px;
+  color: var(--c-text);
+  font-weight: 700;
+  text-decoration: none;
+}
+.home__foot small {
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--c-text-light);
 }
 @media (min-width: 640px) {
   .home__grid {

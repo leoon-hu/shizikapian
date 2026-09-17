@@ -14,6 +14,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadEnv } from 'vite'
 import { categories } from '../src/content/categories'
+import { SISTER_SITES } from '../src/sites'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const publicDir = join(root, 'public')
@@ -111,6 +112,7 @@ function cardsPage(siteUrl: string | undefined): string {
       li p { margin: 4px 0 0; font-size: 14px; color: #716254; }
       footer { max-width: 960px; margin: 32px auto 0; font-size: 13px; color: #716254; }
       footer a { color: inherit; }
+      footer p { margin: 0 0 6px; }
     </style>
   </head>
   <body>
@@ -124,7 +126,10 @@ function cardsPage(siteUrl: string | undefined): string {
     </header>
     <main>${sections}
     </main>
-    <footer>插画来自 <a href="https://github.com/jdecked/twemoji">Twemoji</a>（CC BY 4.0）；应用里的照片来自 Wikimedia Commons，出处见应用内「家长设置 → 素材来源」。</footer>
+    <footer>
+      <p>插画来自 <a href="https://github.com/jdecked/twemoji">Twemoji</a>（CC BY 4.0）；应用里的照片来自 Wikimedia Commons，出处见应用内「家长设置 → 素材来源」。</p>
+      <p>更多应用：${SISTER_SITES.map((s) => `<a href="${s.url}">${esc(s.name)}</a>（${esc(s.desc)}）`).join('、')}</p>
+    </footer>
   </body>
 </html>
 `

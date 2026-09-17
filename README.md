@@ -82,6 +82,14 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 
 加一张卡 = 加一行 → `npm run images` → `npm run audio` → `npm run photos` → `npm test`。测试会检查 id 唯一、例句格式、每张卡的插画 / 词与例句音频都在、清单一致、照片与出处对得上。
 
+## 同一作者的其它学习应用
+
+首页底部和 `cards.html` 页脚的「更多应用」链到这三个站：
+
+- [AI加词](https://jiaci.app)：背单词，FSRS 间隔重复、AI 填充的词条资料、真人级发音。
+- [同步练](https://tongbulian.jiaci.app)：人教版小学同步练习，按单元随机出题、汉字注音、题目朗读。
+- [拼音学习机](https://pinyin.jiaci.app)：给学拼音的孩子的点读 / 拼读 / 跟读 / 测验键盘，真人录音。
+
 ## 素材
 
 - **插画**（`public/images/`，273 个 SVG）：[Twemoji](https://github.com/jdecked/twemoji)（CC-BY 4.0），`npm run images` 从 `@twemoji/svg` 拷出；颜色、形状、数字、草由 `scripts/draw.ts` 自绘。
