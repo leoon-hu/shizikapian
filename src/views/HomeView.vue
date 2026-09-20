@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { categories, type Category } from '@/content'
 import { useSettings } from '@/composables/useSettings'
@@ -8,7 +8,9 @@ import { useLongPress } from '@/composables/useLongPress'
 import CategoryTile from '@/components/CategoryTile.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import InstallHint from '@/components/InstallHint.vue'
-import { SISTER_SITES } from '@/sites'
+import ContactSheet from '@/components/ContactSheet.vue'
+import { AUTHOR_CONTACT, OPEN_CLAIM, REPO_URL, SISTER_SITES } from '@/sites'
+import { useShare } from '@/composables/useShare'
 
 const router = useRouter()
 const settings = useSettings()
@@ -36,6 +38,10 @@ const gear = useLongPress(1500, () => {
 /** 进度环：SVG 圆周长，dashoffset 从整圈（空）过渡到 0（满） */
 const RING_R = 20
 const RING_C = 2 * Math.PI * RING_R
+
+/** 页脚「联系站长」（C6）：家长自己点开的面板，弹站长微信二维码；「分享给朋友」走系统分享面板或复制一段话 */
+const contactOpen = ref(false)
+const { share } = useShare()
 </script>
 
 <template>
@@ -72,11 +78,21 @@ const RING_C = 2 * Math.PI * RING_R
     <div class="home__grid">
       <CategoryTile v-for="cat in visible" :key="cat.id" :category="cat" @pick="enter(cat)" />
     </div>
-    <!-- 页脚「更多应用」（C6）：给家长看的小字，链到同一作者的另外三个站；在方砖下面，要滚到底才看到 -->
+    <!-- 页脚（C6）：给家长看的小字，在方砖下面、要滚到底才看到——一句「开源」说明 + 三个动作（GitHub 源码 / 分享给朋友 / 联系站长）
+         + 「更多应用」链到同一作者的另外三个站；分享 / 联系站长是按钮，弹面板而不是跳走 -->
     <footer class="home__foot">
-      <span>更多应用</span>
-      <a v-for="s in SISTER_SITES" :key="s.url" :href="s.url" target="_blank" rel="noopener">{{ s.name }}<small>{{ s.desc }}</small></a>
+      <p class="home__open">{{ OPEN_CLAIM }}</p>
+      <p class="home__actions">
+        <a :href="REPO_URL" target="_blank" rel="noopener">GitHub 源码 ↗</a>
+        <button type="button" class="home__share" @click="share()">分享给朋友</button>
+        <button type="button" class="home__contact" @click="contactOpen = true">{{ AUTHOR_CONTACT.label }}</button>
+      </p>
+      <p class="home__sites">
+        <span>更多应用</span>
+        <a v-for="s in SISTER_SITES" :key="s.url" :href="s.url" target="_blank" rel="noopener">{{ s.name }}<small>{{ s.desc }}</small></a>
+      </p>
     </footer>
+    <ContactSheet v-if="contactOpen" @close="contactOpen = false" />
   </main>
 </template>
 
@@ -157,23 +173,44 @@ const RING_C = 2 * Math.PI * RING_R
   padding-bottom: var(--gap);
 }
 .home__foot {
+  padding-bottom: 8px;
+  font-size: 13px;
+  color: var(--c-text-light);
+  text-align: center;
+}
+.home__open {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 6px;
+  line-height: 1.5;
+}
+.home__actions,
+.home__sites {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 0 14px;
-  padding-bottom: 8px;
-  font-size: 13px;
-  color: var(--c-text-light);
 }
-.home__foot a {
+.home__actions {
+  gap: 0 18px;
+}
+.home__foot a,
+.home__foot button {
   min-height: var(--tap-adult);
   display: inline-flex;
   align-items: center;
   padding: 0 2px;
   color: var(--c-text);
+  font-size: inherit;
   font-weight: 700;
   text-decoration: none;
+}
+/* 三个动作带下划线，和「更多应用」的站名区分开；分享 / 联系站长是按钮，长得和链接一样 */
+.home__actions a,
+.home__actions button {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .home__foot small {
   margin-left: 4px;

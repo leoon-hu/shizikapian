@@ -14,7 +14,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { loadEnv } from 'vite'
 import { categories } from '../src/content/categories'
-import { SISTER_SITES } from '../src/sites'
+import { AUTHOR_CONTACT, OPEN_CLAIM, REPO_URL, SISTER_SITES } from '../src/sites'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const publicDir = join(root, 'public')
@@ -113,6 +113,8 @@ function cardsPage(siteUrl: string | undefined): string {
       footer { max-width: 960px; margin: 32px auto 0; font-size: 13px; color: #716254; }
       footer a { color: inherit; }
       footer p { margin: 0 0 6px; }
+      footer summary { cursor: pointer; font-weight: 600; }
+      footer .contact img { display: block; max-width: 100%; height: auto; margin-top: 8px; border-radius: 12px; background: #fff; }
     </style>
   </head>
   <body>
@@ -128,7 +130,9 @@ function cardsPage(siteUrl: string | undefined): string {
     </main>
     <footer>
       <p>插画来自 <a href="https://github.com/jdecked/twemoji">Twemoji</a>（CC BY 4.0）；应用里的照片来自 Wikimedia Commons，出处见应用内「家长设置 → 素材来源」。</p>
+      <p>${esc(OPEN_CLAIM)}<a href="${REPO_URL}">GitHub 源码</a></p>
       <p>更多应用：${SISTER_SITES.map((s) => `<a href="${s.url}">${esc(s.name)}</a>（${esc(s.desc)}）`).join('、')}</p>
+      <details class="contact"><summary>${esc(AUTHOR_CONTACT.label)}</summary><p>${esc(AUTHOR_CONTACT.hint)}</p><img src="./${AUTHOR_CONTACT.qr}" alt="站长微信二维码" width="200" height="274" loading="lazy" /></details>
     </footer>
   </body>
 </html>

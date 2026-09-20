@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => ({
       registerType: 'prompt',
       injectManifest: {
         // credits.json 也进离线包：设置页的「素材来源」离线也要能打开（CC BY 的署名要在应用里看得到）
-        globPatterns: ['**/*.{js,css,html,svg,mp3,png,webp,webmanifest}', 'photos/credits.json'],
+        globPatterns: ['**/*.{js,css,html,svg,mp3,png,jpg,webp,webmanifest}', 'photos/credits.json'],
       },
       manifest: {
         name: '识字卡片',

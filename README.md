@@ -56,6 +56,8 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 
 设置只存在本机（localStorage）。页脚有防孩子误退出的提示：iPhone / iPad 用「引导式访问」，Android 用「屏幕固定」；还有一个「全部卡片清单」链接（`cards.html`，一页网页，家长过一遍词和例句用）。
 
+首页方砖下面和设置页页脚都写着一句「开源」说明（免费、无广告、不用注册、不收集个人信息、不联网也能用；代码全部以 MIT 开源，谁都能查、能自己部署）并链到本仓库；「分享给朋友」一键调系统分享面板（微信里教用右上角菜单，电脑上复制一段话 + 链接）；「联系站长」弹作者微信二维码。
+
 ## 内容
 
 17 个分类 256 张卡（首页方砖右上角标着每个分类的张数），按 2–4 岁词汇发展排序：先是身边的动物、家人和自己的身体、吃的、家里的东西、动作和表情，抽象的颜色 / 数字 / 形状放最后。
@@ -90,6 +92,12 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 - [同步练](https://tongbulian.jiaci.app)：人教版小学同步练习，按单元随机出题、汉字注音、题目朗读。
 - [拼音学习机](https://pinyin.jiaci.app)：给学拼音的孩子的点读 / 拼读 / 跟读 / 测验键盘，真人录音。
 
+## 联系作者
+
+有问题、建议或想要的卡片，欢迎加作者微信直接说（首页页脚、家长设置与 `cards.html` 页脚的「联系站长」是同一张二维码）：
+
+<img src="public/wechat-qrcode.jpg" width="200" alt="作者微信二维码">
+
 ## 素材
 
 - **插画**（`public/images/`，273 个 SVG）：[Twemoji](https://github.com/jdecked/twemoji)（CC-BY 4.0），`npm run images` 从 `@twemoji/svg` 拷出；颜色、形状、数字、草由 `scripts/draw.ts` 自绘。
@@ -113,13 +121,15 @@ src/
     usePress.ts         孩子用的按钮 / 方砖 / 图片区的点按判定：不靠 click，整页只认一根手指
     useSettings.ts      家长设置（localStorage，带版本迁移）
     useLongPress.ts     家长入口的长按
+    share.ts / useShare.ts  分享给朋友：按环境选系统分享面板 / 微信菜单提示 / 复制（纯逻辑可单测）+ 面板状态
     usePwa.ts / useWakeLock.ts
   views/                Home（分类方砖）/ Cards（卡片）/ Quiz（小测验）/ Settings（家长设置）
-  components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon
+  components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon / InstallHint + InstallSteps（安装提示）/ ContactSheet（联系站长）/ SharePanel（分享给朋友）
+  sites.ts              站点地址、源码仓库、「开源」一句、分享文案、页脚「更多应用」里另外三个站的名单、站长微信二维码
   styles/               tokens.css 设计变量；base.css 防误触与全局样式
   sw.ts                 自写的 Service Worker：预缓存全部资源 + Range 请求（iOS 才播得出缓存里的 mp3）
 scripts/                images / photos / audio / icons / seo 五个生成脚本，screenshots.mjs 截 README 预览图 → screenshots/
-public/                 images/ photos/ audio/ icons/ 生成的素材
+public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-qrcode.jpg 作者微信二维码
 ```
 
 SEO：应用是 hash 路由的单页，所以根页面带完整的标题 / 描述 / Open Graph / JSON-LD 和一段脚本跑起来前的静态内容，另有一页不用 JS 的 `cards.html` 列出全部卡片的词与例句（构建前由 `scripts/seo.ts` 生成，不进仓库）。在 `.env` 里放 `VITE_SITE_URL=https://你的域名/路径`（不带末尾斜杠），构建时会据它生成 canonical、`og:image` 与 `sitemap.xml`。

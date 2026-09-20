@@ -8,6 +8,9 @@ import { useSpeaker } from '@/composables/useSpeaker'
 import { usePwa } from '@/composables/usePwa'
 import AppIcon from '@/components/AppIcon.vue'
 import InstallSteps from '@/components/InstallSteps.vue'
+import ContactSheet from '@/components/ContactSheet.vue'
+import { AUTHOR_CONTACT, OPEN_CLAIM, REPO_URL } from '@/sites'
+import { useShare } from '@/composables/useShare'
 import type { InstallHintKind } from '@/composables/installHint'
 
 const router = useRouter()
@@ -48,6 +51,9 @@ const installKind = computed<InstallHintKind | null>(() => {
   return 'menu'
 })
 const stepsOpen = ref(false)
+/** 「联系站长」与「分享给朋友」（C6 的第二入口）：与首页页脚同一个面板 */
+const contactOpen = ref(false)
+const { share } = useShare()
 
 /** 离线包状态一行（P7）：下载中带百分比，家长知道是在下而不是卡住了 */
 const offlineText = computed(() => {
@@ -245,6 +251,12 @@ function back() {
       设置只保存在这台设备上。回到首页后长按右上角的齿轮可以再进来。
       怕孩子误退出：添加到主屏幕后，iPhone / iPad 可在「设置 → 辅助功能 → 引导式访问」把设备锁在本应用里（那一页会写明按哪个键），Android 用「屏幕固定」。
     </p>
+    <p class="settings__foot">
+      {{ OPEN_CLAIM }}<a class="settings__link" :href="REPO_URL" target="_blank" rel="noopener">GitHub 源码 ↗</a>
+      觉得好用就<button type="button" class="settings__link settings__contact" @click="share()">分享给朋友</button>；
+      有问题、建议或想要的卡片，<button type="button" class="settings__link settings__contact" @click="contactOpen = true">{{ AUTHOR_CONTACT.label }}</button>（微信二维码）直接说。
+    </p>
+    <ContactSheet v-if="contactOpen" @close="contactOpen = false" />
 
     <details class="credits" @toggle="loadCredits">
       <summary class="credits__summary">素材来源</summary>
@@ -448,6 +460,12 @@ function back() {
   color: var(--c-text);
   font-weight: 600;
   text-decoration: underline;
+}
+/* 段落里的「联系站长」是按钮，长得和旁边的链接一样 */
+.settings__contact {
+  padding: 0;
+  min-height: var(--tap-adult);
+  font-size: inherit;
 }
 
 /* 素材来源：折叠在页底，展开才读清单；只给家长看 */
