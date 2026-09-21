@@ -3,7 +3,7 @@
 在线：**[kapian.jiaci.app](https://kapian.jiaci.app)**（手机 / iPad 打开后添加到主屏幕，离线可用）
 
 给 **3 岁左右幼儿** 的看图听音认知卡片：一张卡 = 两张真实照片 + 一张插画 + 一个词 + 一句例句，点一下就朗读。中文 / 英文 / 中英文可切换。
-纯前端、纯静态、零网络：图片和发音全部打包在应用里，装到主屏幕后离线可用，不联网、不埋点、不要账号。
+纯前端、纯静态：图片和发音全部打包在应用里，装到主屏幕后离线可用，不联网也能用、不要账号。
 
 使用者是不识字、手指点不准、注意力只有几分钟的孩子：所有孩子要用的操作都是大图标 + 颜色 + 声音，文字只是给旁边家长看的；不计时、不计分、不判对错，只有「看、听、说」。
 
@@ -122,6 +122,7 @@ src/
     useSettings.ts      家长设置（localStorage，带版本迁移）
     useLongPress.ts     家长入口的长按
     share.ts / useShare.ts  分享给朋友：按环境选系统分享面板 / 微信菜单提示 / 复制（纯逻辑可单测）+ 面板状态
+    analytics.ts        访问统计（可选）：按 .env 的 VITE_UMAMI_* 生成上报脚本标签；返回键补记一次页面浏览
     usePwa.ts / useWakeLock.ts
   views/                Home（分类方砖）/ Cards（卡片）/ Quiz（小测验）/ Settings（家长设置）
   components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon / InstallHint + InstallSteps（安装提示）/ ContactSheet（联系站长）/ SharePanel（分享给朋友）
@@ -133,6 +134,8 @@ public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-q
 ```
 
 SEO：应用是 hash 路由的单页，所以根页面带完整的标题 / 描述 / Open Graph / JSON-LD 和一段脚本跑起来前的静态内容，另有一页不用 JS 的 `cards.html` 列出全部卡片的词与例句（构建前由 `scripts/seo.ts` 生成，不进仓库）。在 `.env` 里放 `VITE_SITE_URL=https://你的域名/路径`（不带末尾斜杠），构建时会据它生成 canonical、`og:image` 与 `sitemap.xml`。
+
+访问统计（可选）：本机 `.env` 里同时写 `VITE_UMAMI_SCRIPT=https://你的统计站/script.js` 与 `VITE_UMAMI_WEBSITE_ID=<站点 id>`，正式构建会往 `index.html` 与 `cards.html` 的 `<head>` 里加一行 [Umami](https://umami.is)（开源、无 cookie）的上报脚本，只记页面地址、来源、设备与地区；`data-domains` 取 `VITE_SITE_URL` 的主机名，本机预览不上报。两项都不配就什么都不加。逻辑在 `src/composables/analytics.ts`（可单测；返回键那一下 tracker 自己不记，`main.ts` 里补一次）。
 
 Service Worker 预缓存整站（约 20 MB）：6 路并发下载、单个文件失败自动重试、设置页显示进度；有新版本时不会立刻刷新（会打断正在看卡片的孩子），等回到首页且没在朗读时再切换。部署时 `sw.js`、`index.html`、`manifest.webmanifest` 不要套长缓存（`Cache-Control: no-cache`），带 hash 的 `assets/*` 可以长缓存，`photos/` `audio/` `images/` 由 SW 按 revision 更新、HTTP 层缓存一天即可。
 

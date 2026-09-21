@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url'
 import { loadEnv } from 'vite'
 import { categories } from '../src/content/categories'
 import { AUTHOR_CONTACT, OPEN_CLAIM, REPO_URL, SISTER_SITES } from '../src/sites'
+import { type AnalyticsConfig, analyticsConfig, analyticsTag } from '../src/composables/analytics'
 
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const publicDir = join(root, 'public')
@@ -40,7 +41,7 @@ function absoluteTags(siteUrl: string, path: string, image: string) {
   ].join('\n    ')
 }
 
-function cardsPage(siteUrl: string | undefined): string {
+function cardsPage(siteUrl: string | undefined, analytics: AnalyticsConfig | null): string {
   const nav = categories
     .map((c) => `<a href="#${c.id}"><img src="images/cat-${c.id}.svg" alt="" width="28" height="28" /> ${esc(c.name.zh)}</a>`)
     .join('\n      ')
@@ -115,7 +116,7 @@ function cardsPage(siteUrl: string | undefined): string {
       footer p { margin: 0 0 6px; }
       footer summary { cursor: pointer; font-weight: 600; }
       footer .contact img { display: block; max-width: 100%; height: auto; margin-top: 8px; border-radius: 12px; background: #fff; }
-    </style>
+    </style>${analytics ? `\n    ${analyticsTag(analytics)}` : ''}
   </head>
   <body>
     <header>
@@ -139,9 +140,12 @@ function cardsPage(siteUrl: string | undefined): string {
 `
 }
 
-const siteUrl = loadEnv(process.env.NODE_ENV ?? 'production', root, 'VITE_').VITE_SITE_URL?.replace(/\/+$/, '') || undefined
+const env = loadEnv(process.env.NODE_ENV ?? 'production', root, 'VITE_')
+const siteUrl = env.VITE_SITE_URL?.replace(/\/+$/, '') || undefined
+// 访问统计标签（需求 4.6）：.env 配了 VITE_UMAMI_* 才写进 cards.html，与 vite.config.ts 写进 index.html 的是同一行
+const analytics = analyticsConfig(env)
 mkdirSync(publicDir, { recursive: true })
-writeFileSync(join(publicDir, 'cards.html'), cardsPage(siteUrl))
+writeFileSync(join(publicDir, 'cards.html'), cardsPage(siteUrl, analytics))
 writeFileSync(join(publicDir, 'robots.txt'), `User-agent: *\nAllow: /\n${siteUrl ? `Sitemap: ${siteUrl}/sitemap.xml\n` : ''}`)
 if (siteUrl) {
   const today = new Date().toISOString().slice(0, 10)
@@ -153,4 +157,4 @@ if (siteUrl) {
 } else {
   rmSync(join(publicDir, 'sitemap.xml'), { force: true })
 }
-console.log(`cards.html（${total} 张）、robots.txt${siteUrl ? '、sitemap.xml' : ''} → public/${siteUrl ? `，站点 ${siteUrl}` : '（没设 VITE_SITE_URL，不生成 sitemap 与绝对地址）'}`)
+console.log(`cards.html（${total} 张）、robots.txt${siteUrl ? '、sitemap.xml' : ''} → public/${siteUrl ? `，站点 ${siteUrl}` : '（没设 VITE_SITE_URL，不生成 sitemap 与绝对地址）'}${analytics ? '，含访问统计标签' : ''}`)

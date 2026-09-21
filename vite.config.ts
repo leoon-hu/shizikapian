@@ -3,6 +3,7 @@ import { defineConfig } from 'vitest/config'
 import { loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import { analyticsAttrs, analyticsConfig } from './src/composables/analytics'
 
 /**
  * index.html 里需要绝对地址的 SEO 标签（canonical / og:url / og:image）：站点地址来自 .env 的 VITE_SITE_URL（不进仓库），
@@ -29,12 +30,26 @@ function seoHead(siteUrl: string | undefined): Plugin {
   }
 }
 
+/**
+ * 访问统计标签（需求 4.6，composables/analytics.ts）：.env 里 VITE_UMAMI_SCRIPT / VITE_UMAMI_WEBSITE_ID 都有时，正式构建把
+ * 一行 <script defer> 写进 index.html 的 <head>；dev 不加，没配置什么都不加。cards.html 的同一行由 scripts/seo.ts 写。
+ */
+function analyticsTag(env: Record<string, string>): Plugin {
+  const cfg = analyticsConfig(env)
+  return {
+    name: 'shizikapian-analytics-tag',
+    apply: 'build',
+    transformIndexHtml: () => (cfg ? [{ tag: 'script', attrs: analyticsAttrs(cfg), injectTo: 'head' }] : []),
+  }
+}
+
 export default defineConfig(({ mode }) => ({
   // 相对路径：放到任意静态托管的任意子目录都能用（配合 hash 路由）
   base: './',
   plugins: [
     vue(),
     seoHead(loadEnv(mode, process.cwd(), 'VITE_').VITE_SITE_URL),
+    analyticsTag(loadEnv(mode, process.cwd(), 'VITE_')),
     VitePWA({
       // 自写 src/sw.ts（预缓存 + Range 支持），见该文件注释
       strategies: 'injectManifest',

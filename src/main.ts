@@ -6,6 +6,7 @@ import App from '@/App.vue'
 import { usePwa } from '@/composables/usePwa'
 import { useSettings } from '@/composables/useSettings'
 import { INSTALL_HINT_FOREVER } from '@/composables/installHint'
+import { trackBackNavigation } from '@/composables/analytics'
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 
@@ -33,6 +34,8 @@ window.addEventListener('appinstalled', () => {
 })
 
 createApp(App).use(router).mount('#app')
+// 访问统计（需求 4.6）：返回键那一下 tracker 自己不记，这里补；没加统计标签时什么都不做
+trackBackNavigation()
 
 // 离线缓存。新版本装好后不立刻 reload（会打断正在看卡片的孩子），
 // 记下来，等回到首页、且没在朗读时再切换——首页本来就是每次打开的起点，刷新对孩子无感
