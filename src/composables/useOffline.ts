@@ -3,13 +3,13 @@ import { mediaStatus, prefetchMedia, saveData } from '@/composables/offline'
 
 /**
  * 后台下离线包里的图片和发音（composables/offline.ts，需求 4.3 / P7）：页面打开后等一会儿开始（让首页和第一个分类先走），
- * 断网 / 失败停下，联网或回到前台接着下；没下全的一轮过一分钟再补一次。只有一份在跑，进度写进 usePwa().media。
+ * 断网 / 失败停下，联网或回到前台接着下；没下全（连着网）过一分钟再补。只有一份在跑，进度写进 usePwa().media。
  * 没有 Service Worker 的打开方式（微信内置浏览器、无痕、file://）下了也用不上，不下；省流量模式不主动下。
  */
 
 /** 页面打开后等这么久才开始 */
 export const START_DELAY_MS = 4000
-/** 这一轮没下全（个别文件失败）过这么久再补 */
+/** 这一轮没下全（个别文件失败、服务器一时出错停下了）过这么久再补 */
 export const RETRY_MS = 60_000
 
 let running = false
@@ -25,7 +25,9 @@ async function run(): Promise<void> {
     running = false
   }
   const p = pwa.media.value
-  if (p && !p.stopped && p.total > 0 && p.cached < p.total) schedule(RETRY_MS)
+  // 没下全（个别文件失败、或者连续失败停下了——服务器一时忙不过来）又还连着网：过一会儿再补；断网的等 online 事件
+  const complete = !!p && p.total > 0 && p.cached >= p.total
+  if (p && !complete && navigator.onLine !== false) schedule(RETRY_MS)
 }
 
 function schedule(delay: number): void {
