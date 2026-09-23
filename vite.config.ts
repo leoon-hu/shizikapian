@@ -43,13 +43,43 @@ function analyticsTag(env: Record<string, string>): Plugin {
   }
 }
 
+/**
+ * 当前版本（需求 C6「版本与更新」，composables/version.ts）：构建时刻的北京时间「2026-09-23 14:05」（与构建机器的时区无关）。
+ * 页面里是 __APP_VERSION__；同一份写进 dist/version.json 给首页页脚的「检查更新」比对（不在 injectManifest 的 globPatterns 里，
+ * 不进离线包），dev 服务器也回同一份。
+ */
+function buildVersion(d = new Date()): string {
+  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+  const p = Object.fromEntries(fmt.formatToParts(d).map((x) => [x.type, x.value]))
+  return `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`
+}
+function versionFile(version: string): Plugin {
+  const body = `${JSON.stringify({ version })}\n`
+  return {
+    name: 'shizikapian-version-file',
+    configureServer(server) {
+      server.middlewares.use('/version.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-store')
+        res.end(body)
+      })
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: body })
+    },
+  }
+}
+const VERSION = buildVersion()
+
 export default defineConfig(({ mode }) => ({
   // 相对路径：放到任意静态托管的任意子目录都能用（配合 hash 路由）
   base: './',
+  define: { __APP_VERSION__: JSON.stringify(VERSION) },
   plugins: [
     vue(),
     seoHead(loadEnv(mode, process.cwd(), 'VITE_').VITE_SITE_URL),
     analyticsTag(loadEnv(mode, process.cwd(), 'VITE_')),
+    versionFile(VERSION),
     VitePWA({
       // 自写 src/sw.ts（预缓存 + Range 支持），见该文件注释
       strategies: 'injectManifest',

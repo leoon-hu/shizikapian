@@ -9,6 +9,7 @@ import CategoryTile from '@/components/CategoryTile.vue'
 import AppIcon from '@/components/AppIcon.vue'
 import InstallHint from '@/components/InstallHint.vue'
 import ContactSheet from '@/components/ContactSheet.vue'
+import AppVersion from '@/components/AppVersion.vue'
 import { AUTHOR_CONTACT, OPEN_CLAIM, REPO_URL, SISTER_SITES } from '@/sites'
 import { useShare } from '@/composables/useShare'
 
@@ -78,19 +79,21 @@ const { share } = useShare()
     <div class="home__grid">
       <CategoryTile v-for="cat in visible" :key="cat.id" :category="cat" @pick="enter(cat)" />
     </div>
-    <!-- 页脚（C6）：给家长看的小字，在方砖下面、要滚到底才看到——一句「开源」说明 + 三个动作（GitHub 源码 / 分享给朋友 / 联系站长）
-         + 「更多应用」链到同一作者的另外三个站；分享 / 联系站长是按钮，弹面板而不是跳走 -->
+    <!-- 页脚（C6，排版三个静态站统一）：给家长看的小字，在方砖下面、要滚到底才看到。一条细线隔开，从上到下：版本卡片（当前版本 + 检查更新）
+         → 一句「开源」说明 → 三个动作（GitHub 源码 / 分享给朋友 / 联系站长）→「更多应用」（标题单独一行，手机上一个站一行）；
+         分享 / 联系站长是按钮，弹面板而不是跳走 -->
     <footer class="home__foot">
+      <AppVersion />
       <p class="home__open">{{ OPEN_CLAIM }}</p>
       <p class="home__actions">
         <a :href="REPO_URL" target="_blank" rel="noopener">GitHub 源码 ↗</a>
         <button type="button" class="home__share" @click="share()">分享给朋友</button>
         <button type="button" class="home__contact" @click="contactOpen = true">{{ AUTHOR_CONTACT.label }}</button>
       </p>
-      <p class="home__sites">
-        <span>更多应用</span>
+      <nav class="home__sites" aria-label="更多应用">
+        <span class="home__sites-title">更多应用</span>
         <a v-for="s in SISTER_SITES" :key="s.url" :href="s.url" target="_blank" rel="noopener">{{ s.name }}<small>{{ s.desc }}</small></a>
-      </p>
+      </nav>
     </footer>
     <ContactSheet v-if="contactOpen" @close="contactOpen = false" />
   </main>
@@ -172,17 +175,23 @@ const { share } = useShare()
   gap: var(--gap);
   padding-bottom: var(--gap);
 }
+/* 页脚（三个静态站同一套排版）：和方砖之间一条细线，版本卡片在最上面 */
 .home__foot {
-  padding-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 20px 0 8px;
+  border-top: 1px solid var(--c-line-strong);
   font-size: 13px;
   color: var(--c-text-light);
   text-align: center;
 }
 .home__open {
   max-width: 560px;
-  margin: 0 auto;
   padding: 0 6px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .home__actions,
 .home__sites {
@@ -190,13 +199,15 @@ const { share } = useShare()
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 0 14px;
+  gap: 0 20px;
 }
+/* 三个动作和上面那句开源说明是一组，靠近一点 */
 .home__actions {
-  gap: 0 18px;
+  margin-top: -8px;
 }
-.home__foot a,
-.home__foot button {
+.home__actions a,
+.home__actions button,
+.home__sites a {
   min-height: var(--tap-adult);
   display: inline-flex;
   align-items: center;
@@ -212,11 +223,23 @@ const { share } = useShare()
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.home__foot small {
-  margin-left: 4px;
+/* 更多应用：标题单独一行，站点宽屏排一行、手机上一个站一行 */
+.home__sites-title {
+  flex-basis: 100%;
+  font-size: 12px;
+}
+.home__sites small {
+  margin-left: 6px;
   font-size: 12px;
   font-weight: 400;
   color: var(--c-text-light);
+}
+@media (max-width: 600px) {
+  .home__sites a {
+    flex-basis: 100%;
+    justify-content: center;
+    min-height: 40px;
+  }
 }
 @media (min-width: 640px) {
   .home__grid {
