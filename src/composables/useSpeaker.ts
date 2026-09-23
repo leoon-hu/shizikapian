@@ -2,6 +2,7 @@ import type { Card, Category, PromptId } from '@/content'
 import { useSettings } from './useSettings'
 import { createSpeaker } from './speaker'
 import { planCard, planCategory, planDone, planQuiz, preloadList, type SpeechItem } from './speechPlan'
+import { usePwa } from './usePwa'
 
 /**
  * 全局唯一的朗读器：队列 / 打断 / 看门狗的逻辑在 speaker.ts（可单测），这里只做 DOM 适配——
@@ -150,12 +151,12 @@ let workers = 0
 /** 同时最多开几条连接预热：多了会和正在读的分类名、还在装的离线包抢同一批连接，首次运行点方砖要等一秒才出声 */
 const PRELOAD_CONCURRENCY = 2
 /**
- * 把一个分类的音频提前 fetch 一遍暖缓存（Service Worker 预缓存已支持 Range，不需要 blob URL）。
- * SW 已接管 = 全部音频都在预缓存里，不用再取；没接管（首次运行 / 不支持 SW）时按顺序小并发地取，
+ * 把一个分类的音频提前 fetch 一遍暖缓存（SW 的媒体路由支持 Range，不需要 blob URL；取过的它也顺手存进离线缓存）。
+ * 离线包已备齐 = 全部音频都在缓存里，不用再取；还没备齐（首次运行、后台还在下、不支持 SW）时按顺序小并发地取，
  * 换分类就丢掉上一分类没取完的。file:// 下 fetch 会失败，忽略
  */
 function preload(cat: Category) {
-  if (typeof navigator !== 'undefined' && navigator.serviceWorker?.controller) return
+  if (usePwa().offlineState.value === 'ready') return
   const settings = useSettings()
   pending = preloadList(cat, settings.display, { sentences: settings.sentences }).filter((u) => !preloaded.has(u))
   while (workers < PRELOAD_CONCURRENCY && pending.length) {

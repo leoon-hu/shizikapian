@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto'
+import { readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vitest/config'
 import { loadEnv, type Plugin } from 'vite'
@@ -71,6 +74,43 @@ function versionFile(version: string): Plugin {
 }
 const VERSION = buildVersion()
 
+/**
+ * 离线包里图片和发音的清单（需求 4.3，composables/offline.ts）：public/ 里的插画、照片、发音 → 内容哈希（md5 前 10 位），
+ * 构建时写成 dist/media.json（不进预缓存，页面在后台照着它把图片和发音下进缓存），dev 服务器也回同一份。
+ */
+function mediaFile(match: RegExp): Plugin {
+  let dir = ''
+  const body = (): string => {
+    const files: Array<[string, string]> = []
+    const walk = (rel: string): void => {
+      for (const e of readdirSync(join(dir, rel), { withFileTypes: true })) {
+        const p = rel ? `${rel}/${e.name}` : e.name
+        if (e.isDirectory()) walk(p)
+        else if (match.test(p)) files.push([p, createHash('md5').update(readFileSync(join(dir, p))).digest('hex').slice(0, 10)])
+      }
+    }
+    walk('')
+    files.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    return `${JSON.stringify({ files: Object.fromEntries(files) })}\n`
+  }
+  return {
+    name: 'shizikapian-media-file',
+    configResolved(c) {
+      dir = c.publicDir
+    },
+    configureServer(server) {
+      server.middlewares.use('/media.json', (_req, res) => {
+        res.setHeader('Content-Type', 'application/json')
+        res.setHeader('Cache-Control', 'no-cache')
+        res.end(body())
+      })
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'media.json', source: body() })
+    },
+  }
+}
+
 export default defineConfig(({ mode }) => ({
   // 相对路径：放到任意静态托管的任意子目录都能用（配合 hash 路由）
   base: './',
@@ -80,6 +120,7 @@ export default defineConfig(({ mode }) => ({
     seoHead(loadEnv(mode, process.cwd(), 'VITE_').VITE_SITE_URL),
     analyticsTag(loadEnv(mode, process.cwd(), 'VITE_')),
     versionFile(VERSION),
+    mediaFile(/^(images\/[^/]+\.svg|photos\/[^/]+\.webp|audio\/.+\.mp3)$/),
     VitePWA({
       // 自写 src/sw.ts（预缓存 + Range 支持），见该文件注释
       strategies: 'injectManifest',
@@ -87,9 +128,13 @@ export default defineConfig(({ mode }) => ({
       filename: 'sw.ts',
       // 新版本不自动 reload：由 main.ts 在回到首页且没在朗读时才切换
       registerType: 'prompt',
+      // 预缓存只有页面外壳（代码、图标、清单页、照片出处，几十个文件、几秒装好）：插画 / 照片 / 发音（约 22 MB）由页面在后台下
+      // （composables/offline.ts + src/sw.ts 的媒体路由）；以前全在预缓存里，SW 要全部下完才算装好，「检查更新」「重新安装」都要排队等它
       injectManifest: {
         // credits.json 也进离线包：设置页的「素材来源」离线也要能打开（CC BY 的署名要在应用里看得到）
-        globPatterns: ['**/*.{js,css,html,svg,mp3,png,jpg,webp,webmanifest}', 'photos/credits.json'],
+        globPatterns: ['**/*.{js,css,html,png,jpg,webmanifest}', 'photos/credits.json'],
+        // 分享预览图只给社交平台抓，不进离线包
+        globIgnores: ['icons/og.png'],
       },
       manifest: {
         name: '识字卡片',

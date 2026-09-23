@@ -1,15 +1,16 @@
 /// <reference lib="webworker" />
 /**
- * Service Worker：预缓存全部资源（含图片与音频），添加到主屏幕后断网可用。
+ * Service Worker：预缓存页面外壳（代码、图标、清单页、照片出处），图片和发音走下面的媒体路由；添加到主屏幕后断网可用。
  * 自己写而不用 generateSW，是为了：
- * - 给预缓存挂上 RangeRequestsPlugin——iOS Safari 取媒体时先发 Range: bytes=0-1，缓存里的完整 200 响应它不认，音频会静默失败；
- * - 自己跑 install：Workbox 自带的 install 是 1700 多个文件一个接一个下（每个都要等一个来回，4G 上要几分钟，
- *   超过 5 分钟还会被 Chrome 杀掉），而且任何一个文件失败整包作废。这里改成几路并发、单个文件失败重试，
- *   并把进度发给页面（家长设置页显示百分比）。
+ * - 给媒体挂上 Range 支持——iOS Safari 取媒体时先发 Range: bytes=0-1，缓存里的完整 200 响应它不认，音频会静默失败；
+ * - 自己跑 install：Workbox 自带的 install 是一个接一个下，任何一个文件失败整包作废。这里改成几路并发、单个文件失败重试。
+ * 图片和发音（约 22 MB）2026-09-23 起不进预缓存（需求 4.3）：以前全在预缓存里，SW 要全部下完才算装好，要一两分钟，
+ * 「检查更新」「重新安装」都要排在它后面等；现在由页面在后台下进缓存 MEDIA_CACHE（composables/offline.ts），
+ * 这里缓存优先从它取、没有才走网络并存下。
  */
 import { cleanupOutdatedCaches, PrecacheController, PrecacheRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
-import { RangeRequestsPlugin } from 'workbox-range-requests'
+import { RangeRequestsPlugin, createPartialResponse } from 'workbox-range-requests'
 import { clientsClaim } from 'workbox-core'
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<{ url: string; revision: string | null }> }
@@ -18,8 +19,6 @@ declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: Array<{ url: str
 const CONCURRENCY = 6
 /** 单个文件失败后重试几次、每次等多久（弱网偶发的一次失败不该让整包重来） */
 const RETRY_DELAYS_MS = [1000, 3000, 8000]
-/** 每下完多少个文件通知页面一次 */
-const PROGRESS_EVERY = 25
 
 // 构建时注入的清单只能出现一次（vite-plugin-pwa 的断言），先存下来
 const manifest = self.__WB_MANIFEST
@@ -34,11 +33,6 @@ const revisioned = new Set<string>()
 for (const e of manifest) if (typeof e !== 'string' && e.revision) revisioned.add(e.url)
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
-
-async function notify(done: number, total: number) {
-  const clients = await self.clients.matchAll({ includeUncontrolled: true })
-  for (const c of clients) c.postMessage({ type: 'precache-progress', done, total })
-}
 
 /** 取一个文件进预缓存（已在缓存里的 Workbox 会直接跳过），失败按 RETRY_DELAYS_MS 重试 */
 async function cacheOne(url: string, cacheKey: string, event: ExtendableEvent) {
@@ -58,22 +52,41 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
       const entries = [...controller.getURLsToCacheKeys()]
-      const total = entries.length
       let next = 0
-      let done = 0
       const worker = async () => {
         while (next < entries.length) {
           const [url, cacheKey] = entries[next++]
           await cacheOne(url, cacheKey, event)
-          done++
-          if (done % PROGRESS_EVERY === 0) void notify(done, total)
         }
       }
       await Promise.all(Array.from({ length: CONCURRENCY }, worker))
-      void notify(total, total)
     })(),
   )
 })
+/** 与 composables/offline.ts 的 MEDIA_CACHE 一致 */
+const MEDIA_CACHE = 'media'
+/** 图片和发音：插画 images/*.svg、照片 photos/*.webp、发音 audio/**.mp3（子路径部署也对，所以不锚开头） */
+const MEDIA_RE = /\/(images\/[^/]+\.svg|photos\/[^/]+\.webp|audio\/.+\.mp3)$/
+
+/**
+ * 媒体路由：缓存优先。只认同源、不带查询串的地址——页面后台下载时带 ?v=哈希，要绕过这里直接取网络（改过的文件不能被缓存里的旧文件顶上）。
+ * 缓存里没有：取整个文件（不带 Range，好存下）存进缓存，再按请求的 Range 切一段回去。
+ */
+registerRoute(
+  ({ url, request, sameOrigin }) => sameOrigin && request.method === 'GET' && !url.search && MEDIA_RE.test(url.pathname),
+  async ({ url, request, event }) => {
+    const cache = await caches.open(MEDIA_CACHE)
+    let res = await cache.match(url.href)
+    if (!res) {
+      const net = await fetch(url.href, { credentials: 'same-origin' })
+      if (net.status !== 200) return net
+      ;(event as ExtendableEvent | undefined)?.waitUntil(cache.put(url.href, net.clone()).catch(() => undefined))
+      res = net
+    }
+    return request.headers.has('range') ? createPartialResponse(request, res) : res
+  },
+)
+
 self.addEventListener('activate', (event) => {
   event.waitUntil(controller.activate(event))
 })

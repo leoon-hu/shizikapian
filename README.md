@@ -123,13 +123,14 @@ src/
     useLongPress.ts     家长入口的长按
     share.ts / useShare.ts  分享给朋友：按环境选系统分享面板 / 微信菜单提示 / 复制（纯逻辑可单测）+ 面板状态
     analytics.ts        访问统计（可选）：按 .env 的 VITE_UMAMI_* 生成上报脚本标签；返回键补记一次页面浏览
+    offline.ts / useOffline.ts  离线包里的图片和发音：照 media.json 在后台下进缓存（只补缺 / 换改过的、可断点续传、下完清旧，纯逻辑可单测）+ 启动与重试
     version.ts          当前版本与手动更新：比对 version.json、让 SW 换新版本后重新载入、重新安装、重新载入后报结果（纯逻辑可单测）
     usePwa.ts / useWakeLock.ts
   views/                Home（分类方砖）/ Cards（卡片）/ Quiz（小测验）/ Settings（家长设置）
   components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon / InstallHint + InstallSteps（安装提示）/ ContactSheet（联系站长）/ SharePanel（分享给朋友）/ AppVersion（首页页脚的版本卡片）
   sites.ts              站点地址、源码仓库、「开源」一句、分享文案、页脚「更多应用」里另外三个站的名单、站长微信二维码
   styles/               tokens.css 设计变量；base.css 防误触与全局样式
-  sw.ts                 自写的 Service Worker：预缓存全部资源 + Range 请求（iOS 才播得出缓存里的 mp3）
+  sw.ts                 自写的 Service Worker：预缓存页面外壳；图片和发音缓存优先 + Range 请求（iOS 才播得出缓存里的 mp3）
 scripts/                images / photos / audio / icons / seo 五个生成脚本，screenshots.mjs 截 README 预览图 → screenshots/
 public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-qrcode.jpg 作者微信二维码
 ```
@@ -138,7 +139,7 @@ SEO：应用是 hash 路由的单页，所以根页面带完整的标题 / 描�
 
 访问统计（可选）：本机 `.env` 里同时写 `VITE_UMAMI_SCRIPT=https://你的统计站/script.js` 与 `VITE_UMAMI_WEBSITE_ID=<站点 id>`，正式构建会往 `index.html` 与 `cards.html` 的 `<head>` 里加一行 [Umami](https://umami.is)（开源、无 cookie）的上报脚本，只记页面地址、来源、设备与地区；`data-domains` 取 `VITE_SITE_URL` 的主机名，本机预览不上报。两项都不配就什么都不加。逻辑在 `src/composables/analytics.ts`（可单测；返回键那一下 tracker 自己不记，`main.ts` 里补一次）。
 
-Service Worker 预缓存整站（约 20 MB）：6 路并发下载、单个文件失败自动重试、设置页显示进度；有新版本时不会立刻刷新（会打断正在看卡片的孩子），等回到首页且没在朗读时再切换。首页页脚最上面的版本卡片显示当前版本（构建时刻），家长点「检查更新」会和服务器上的 `version.json`（构建时一起生成）比对，有新版本就下载变了的文件（显示进度）并马上刷新；没更新成功还能「重新安装」（清掉缓存重新下载，设置不丢）。`version.json` 不要套长缓存。部署时 `sw.js`、`index.html`、`manifest.webmanifest` 不要套长缓存（`Cache-Control: no-cache`），带 hash 的 `assets/*` 可以长缓存，`photos/` `audio/` `images/` 由 SW 按 revision 更新、HTTP 层缓存一天即可。
+Service Worker 只预缓存页面外壳（十几个文件，几秒装好）；插画、照片、发音（约 22 MB）由页面在后台分批下进另一个缓存（按构建时生成的 `media.json` 里的内容哈希只补缺的、换改过的，断了下次接着下，设置页与首页版本卡片显示进度），SW 离线时从它取并支持 Range；有新版本时不会立刻刷新（会打断正在看卡片的孩子），等回到首页且没在朗读时再切换。首页页脚最上面的版本卡片显示当前版本（构建时刻），家长点「检查更新」会和服务器上的 `version.json`（构建时一起生成）比对，有新版本就下载变了的文件（显示进度）并马上刷新；没更新成功还能「重新安装」（清掉缓存重新下载，设置不丢）。`version.json` 不要套长缓存。部署时 `sw.js`、`index.html`、`manifest.webmanifest` 不要套长缓存（`Cache-Control: no-cache`），带 hash 的 `assets/*` 可以长缓存，`photos/` `audio/` `images/` 由 SW 按 revision 更新、HTTP 层缓存一天即可。
 
 ## 许可
 

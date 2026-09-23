@@ -7,6 +7,7 @@ import { usePwa } from '@/composables/usePwa'
 import { useSettings } from '@/composables/useSettings'
 import { INSTALL_HINT_FOREVER } from '@/composables/installHint'
 import { trackBackNavigation } from '@/composables/analytics'
+import { setupOffline } from '@/composables/useOffline'
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 
@@ -37,8 +38,9 @@ createApp(App).use(router).mount('#app')
 // 访问统计（需求 4.6）：返回键那一下 tracker 自己不记，这里补；没加统计标签时什么都不做
 trackBackNavigation()
 
-// 离线缓存。新版本装好后不立刻 reload（会打断正在看卡片的孩子），
-// 记下来，等回到首页、且没在朗读时再切换——首页本来就是每次打开的起点，刷新对孩子无感
+// 离线缓存：Service Worker 只预缓存页面外壳（几秒装好），图片和发音由页面在后台下（useOffline.ts，需求 4.3）。
+// 新版本装好后不立刻 reload（会打断正在看卡片的孩子），
+// 记下来，等回到首页、且没在朗读时再切换——首页本来就是每次打开的起点，刷新对孩子无感（家长在页脚点「检查更新」的除外）
 let applyUpdate: ((reload?: boolean) => Promise<void>) | null = null
 /**
  * 首次安装失败（某个文件重试几次都没下下来、中途断网）时浏览器会把注册整个丢掉，本页再也不会重试，
@@ -50,7 +52,7 @@ const RETRY_DELAYS = [5_000, 20_000, 60_000]
 let attempts = 0
 let retryTimer: number | undefined
 function scheduleRetry() {
-  pwa.offlineState.value = 'failed'
+  pwa.swState.value = 'failed'
   if (retryTimer !== undefined || attempts >= RETRY_DELAYS.length) return
   retryTimer = window.setTimeout(() => {
     retryTimer = undefined
@@ -59,12 +61,12 @@ function scheduleRetry() {
   }, RETRY_DELAYS[attempts])
 }
 function startSW() {
-  if (pwa.offlineState.value === 'unsupported') return
-  pwa.offlineState.value = 'installing'
+  if (pwa.swState.value === 'unsupported') return
+  if (pwa.swState.value !== 'ready') pwa.swState.value = 'installing'
   const update = registerSW({
     immediate: true,
     onOfflineReady() {
-      pwa.offlineState.value = 'ready'
+      pwa.swState.value = 'ready'
     },
     onNeedRefresh() {
       applyUpdate = update
@@ -79,23 +81,25 @@ function startSW() {
     onRegisterError(err: unknown) {
       // 取 sw.js 失败（弱网、服务器 5xx）是 TypeError，值得重试；其它（无痕模式的 SecurityError、协议不对）是环境问题
       if (err instanceof TypeError) scheduleRetry()
-      else pwa.offlineState.value = 'unsupported'
+      else pwa.swState.value = 'unsupported'
     },
   })
 }
 startSW()
 window.addEventListener('online', () => {
-  if (pwa.offlineState.value !== 'failed') return
+  if (pwa.swState.value !== 'failed') return
   if (retryTimer !== undefined) {
     clearTimeout(retryTimer)
     retryTimer = undefined
   }
   startSW()
 })
-// SW 每下完一批文件发一次进度，设置页显示百分比
-navigator.serviceWorker?.addEventListener('message', (e: MessageEvent) => {
-  if (e.data?.type === 'precache-progress') pwa.progress.value = { done: e.data.done, total: e.data.total }
+// SW 接管页面（首次装好 / 新版本换上）：外壳离线可用了
+navigator.serviceWorker?.addEventListener('controllerchange', () => {
+  pwa.swState.value = 'ready'
 })
+// 图片和发音在后台下（设置页与首页版本卡片显示进度）
+setupOffline()
 router.afterEach((to) => {
   if (to.name === 'home' && applyUpdate && document.visibilityState === 'visible' && !useSpeaker().busy.value) {
     const run = applyUpdate

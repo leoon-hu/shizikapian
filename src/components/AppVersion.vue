@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // 首页页脚最上面的「版本与更新」卡片（需求 C6，child-education 三个静态站统一）：应用图标 + 当前版本 + 「检查更新」。
-// 有新版本就让 Service Worker 取新的（下载进度跟着显示）、装好接管后自动重新载入；重新载入后卡片滚到眼前，说「已更新」或「更新没有完成」。
-// 检查过、慢、失败时给「重新安装」（先确认连得上服务器，再清掉缓存重新下载）。
+// 有新版本就让 Service Worker 取新的、装好接管后自动重新载入；重新载入后卡片滚到眼前，说「已更新」或「更新没有完成」。
+// 检查过、慢、失败时给「重新安装」（先确认连得上服务器，再清掉缓存重新下载）。最下面一行是离线包（图片和发音）下到哪了（4.3 / P7）。
 // 给家长看的：在方砖下面要滚到底才看得到，不出声、不算孩子的操作面。逻辑在 composables/version.ts。
 import { computed, onMounted, ref } from 'vue'
 import { APP_VERSION, applyUpdate, checkVersion, noteUpdate, reinstall, takeUpdateNote } from '@/composables/version'
@@ -43,13 +43,21 @@ const root = ref<HTMLElement | null>(null)
 const busy = computed(() => state.value === 'checking' || state.value === 'found' || state.value === 'slow' || state.value === 'reinstalling')
 const canReinstall = computed(() => ['latest', 'failed', 'installFailed', 'incomplete', 'slow'].includes(state.value))
 const buttonText = computed(() => (state.value === 'checking' ? '检查中…' : busy.value ? '更新中…' : '检查更新'))
-/** 新 SW 装的时候每下完一批文件报一次进度（src/sw.ts），更新中把百分比带上 */
-const percent = computed(() => {
+const message = computed(() => (state.value === 'idle' || state.value === 'checking' ? '' : TEXT[state.value](found.value)))
+/** 离线包（图片和发音，composables/offline.ts）后台下到哪了 */
+const offlineLine = computed(() => {
   const p = pwa.progress.value
-  if ((state.value !== 'found' && state.value !== 'slow') || !p || p.total <= 0 || p.done >= p.total) return ''
-  return `（${Math.floor((p.done / p.total) * 100)}%）`
+  switch (pwa.offlineState.value) {
+    case 'ready':
+      return '离线包：已备齐，没有网也能用'
+    case 'unsupported':
+      return '这个浏览器存不了离线包，只能联网用'
+    case 'failed':
+      return p ? `离线包：已下载 ${Math.floor((p.done / p.total) * 100)}%，联网后会接着下` : '离线包：联网后会在后台自动下载'
+    default:
+      return p ? `离线包（图片和发音）：已下载 ${Math.min(99, Math.floor((p.done / p.total) * 100))}%` : '离线包：打开页面后会在后台自动下载'
+  }
 })
-const message = computed(() => (state.value === 'idle' || state.value === 'checking' ? '' : TEXT[state.value](found.value) + percent.value))
 const tone = computed(() => {
   if (['latest', 'updated', 'reinstalled'].includes(state.value)) return 'ok'
   if (['offline', 'failed', 'installFailed', 'incomplete'].includes(state.value)) return 'warn'
@@ -109,6 +117,7 @@ onMounted(() => {
     </div>
     <p class="ver__status" :class="`ver__status--${tone}`" role="status">{{ message }}</p>
     <p v-if="canReinstall" class="ver__more">还是旧版？<button type="button" class="ver__redo" @click="redo">重新安装</button>（清掉本机缓存重新下载图片和发音，设置不会丢）</p>
+    <p class="ver__offline">{{ offlineLine }}</p>
   </section>
 </template>
 
@@ -203,6 +212,14 @@ onMounted(() => {
 }
 .ver__more {
   margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--c-text-light);
+}
+.ver__offline {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--c-line);
   font-size: 13px;
   line-height: 1.5;
   color: var(--c-text-light);
