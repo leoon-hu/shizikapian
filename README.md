@@ -1,9 +1,9 @@
 # 识字卡片
 
-在线：**[kapian.jiaci.app](https://kapian.jiaci.app)**（手机 / iPad 打开后添加到主屏幕，离线可用）
+在线：**[kapian.jiaci.app](https://kapian.jiaci.app)**（手机 / iPad 打开后可以添加到主屏幕，像 App 一样全屏用）
 
 给 **3 岁左右幼儿** 的看图听音认知卡片：一张卡 = 两张真实照片 + 一张插画 + 一个词 + 一句例句，点一下就朗读。中文 / 英文 / 中英文可切换。
-纯前端、纯静态：图片和发音全部打包在应用里，装到主屏幕后离线可用，不联网也能用、不要账号。
+纯前端、纯静态、不要账号：图片和发音只在打开对应分类时才下载，用过的会缓存（不保证没网也能用）。
 
 使用者是不识字、手指点不准、注意力只有几分钟的孩子：所有孩子要用的操作都是大图标 + 颜色 + 声音，文字只是给旁边家长看的；不计时、不计分、不判对错，只有「看、听、说」。
 
@@ -51,12 +51,12 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 | 读例句 | 关掉只读词、不显示例句 |
 | 小测验 | 关掉后卡片页不显示「?」入口 |
 | 显示哪些分类 | 隐藏暂时不想给孩子看的分类（至少留一个） |
-| 离线与安装 | 离线包下载进度 / 是否就绪；能一键安装时给「安装到主屏幕」按钮，其它环境「查看步骤」（与首页提示同一份步骤面板）；没有声音时先调媒体音量 |
+| 安装到主屏幕 | 能一键安装时给「安装到主屏幕」按钮，其它环境「查看步骤」（与首页提示同一份步骤面板）；没有声音时先调媒体音量 |
 | 素材来源 | 页底折叠栏：插画与每张照片的作者、许可、原页面 |
 
 设置只存在本机（localStorage）。页脚有防孩子误退出的提示：iPhone / iPad 用「引导式访问」，Android 用「屏幕固定」；还有一个「全部卡片清单」链接（`cards.html`，一页网页，家长过一遍词和例句用）。
 
-首页方砖下面和设置页页脚都写着一句「开源」说明（免费、无广告、不用注册、不收集个人信息、不联网也能用；代码全部以 MIT 开源，谁都能查、能自己部署）并链到本仓库；「分享给朋友」一键调系统分享面板（微信里教用右上角菜单，电脑上复制一段话 + 链接）；「联系站长」弹作者微信二维码。
+首页方砖下面和设置页页脚都写着一句「开源」说明（免费、无广告、不用注册、不收集个人信息；代码全部以 MIT 开源，谁都能查、能自己部署）并链到本仓库；「分享给朋友」一键调系统分享面板（微信里教用右上角菜单，电脑上复制一段话 + 链接）；「联系站长」弹作者微信二维码。
 
 ## 内容
 
@@ -123,14 +123,13 @@ src/
     useLongPress.ts     家长入口的长按
     share.ts / useShare.ts  分享给朋友：按环境选系统分享面板 / 微信菜单提示 / 复制（纯逻辑可单测）+ 面板状态
     analytics.ts        访问统计（可选）：按 .env 的 VITE_UMAMI_* 生成上报脚本标签；返回键补记一次页面浏览
-    offline.ts / useOffline.ts  离线包里的图片和发音：照 media.json 在后台下进缓存（只补缺 / 换改过的、可断点续传、下完清旧，纯逻辑可单测）+ 启动与重试
     version.ts          当前版本与手动更新：比对 version.json、让 SW 换新版本后重新载入、重新安装、重新载入后报结果（纯逻辑可单测）
     usePwa.ts / useWakeLock.ts
   views/                Home（分类方砖）/ Cards（卡片）/ Quiz（小测验）/ Settings（家长设置）
   components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon / InstallHint + InstallSteps（安装提示）/ ContactSheet（联系站长）/ SharePanel（分享给朋友）/ AppVersion（首页页脚的版本卡片）
   sites.ts              站点地址、源码仓库、「开源」一句、分享文案、页脚「更多应用」里另外三个站的名单、站长微信二维码
   styles/               tokens.css 设计变量；base.css 防误触与全局样式
-  sw.ts                 自写的 Service Worker：预缓存页面外壳；图片和发音缓存优先 + Range 请求（iOS 才播得出缓存里的 mp3）
+  sw.ts                 自写的 Service Worker：预缓存页面外壳；图片和发音按需缓存（先用缓存、后台更新）+ Range 请求（iOS 才播得出缓存里的 mp3）
 scripts/                images / photos / audio / icons / seo 五个生成脚本，screenshots.mjs 截 README 预览图 → screenshots/
 public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-qrcode.jpg 作者微信二维码
 ```
@@ -139,7 +138,7 @@ SEO：应用是 hash 路由的单页，所以根页面带完整的标题 / 描�
 
 访问统计（可选）：本机 `.env` 里同时写 `VITE_UMAMI_SCRIPT=https://你的统计站/script.js` 与 `VITE_UMAMI_WEBSITE_ID=<站点 id>`，正式构建会往 `index.html` 与 `cards.html` 的 `<head>` 里加一行 [Umami](https://umami.is)（开源、无 cookie）的上报脚本，只记页面地址、来源、设备与地区；`data-domains` 取 `VITE_SITE_URL` 的主机名，本机预览不上报。两项都不配就什么都不加。逻辑在 `src/composables/analytics.ts`（可单测；返回键那一下 tracker 自己不记，`main.ts` 里补一次）。
 
-Service Worker 只预缓存页面外壳（十几个文件，几秒装好）；插画、照片、发音（约 22 MB）由页面在后台分批下进另一个缓存（按构建时生成的 `media.json` 里的内容哈希只补缺的、换改过的，断了下次接着下，设置页与首页版本卡片显示进度），SW 离线时从它取并支持 Range；有新版本时不会立刻刷新（会打断正在看卡片的孩子），等回到首页且没在朗读时再切换。首页页脚最上面的版本卡片显示当前版本（构建时刻），家长点「检查更新」会和服务器上的 `version.json`（构建时一起生成）比对，有新版本就下载变了的文件（显示进度）并马上刷新；没更新成功还能「重新安装」（清掉缓存重新下载，设置不丢）。`version.json` 不要套长缓存。部署时 `sw.js`、`index.html`、`manifest.webmanifest` 不要套长缓存（`Cache-Control: no-cache`），带 hash 的 `assets/*` 可以长缓存，`photos/` `audio/` `images/` 由 SW 按 revision 更新、HTTP 层缓存一天即可。
+Service Worker 只预缓存页面外壳（十几个文件，几秒装好）；插画、照片、发音（整站约 22 MB）**不会一打开就全部下载**：页面用到哪个才取哪个（首页只取方砖上的分类图，进一个分类才取这个分类的照片、插画与发音），SW 把取过的存进另一个缓存，下次先用缓存、同时在后台按 HTTP 缓存规则更新一次（文件名不带内容哈希，素材改过也换得上），并支持 Range。不保证离线使用：没网时打开过的内容多半还能看，没打开过的就没有；有新版本时不会立刻刷新（会打断正在看卡片的孩子），等回到首页且没在朗读时再切换。首页页脚最上面的版本卡片显示当前版本（构建时刻），家长点「检查更新」会和服务器上的 `version.json`（构建时一起生成）比对，有新版本就下载变了的文件并马上刷新；没更新成功还能「重新安装」（清掉缓存重新下载，设置不丢）。`version.json` 不要套长缓存。部署时 `sw.js`、`index.html`、`manifest.webmanifest` 不要套长缓存（`Cache-Control: no-cache`），带 hash 的 `assets/*` 可以长缓存，`photos/` `audio/` `images/` 文件名不带哈希，HTTP 层缓存一天即可（过期后 SW 在后台换上新文件）。
 
 ## 许可
 

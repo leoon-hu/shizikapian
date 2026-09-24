@@ -30,6 +30,6 @@ export const AUTHOR_CONTACT = {
 export const SITE_URL = 'https://kapian.jiaci.app'
 export const REPO_URL = 'https://github.com/leoon-hu/shizikapian'
 /** 页脚「开源」一句：首页、设置页、cards.html 与根页面静态启动页同一句（后两处是生成 / 手写的，改了要同步） */
-export const OPEN_CLAIM = '免费、无广告、不用注册、不收集个人信息，图片和发音全部打包在应用里、不联网也能用；代码全部开源（MIT），谁都能查、也能自己部署。'
+export const OPEN_CLAIM = '免费、无广告、不用注册、不收集个人信息；代码全部开源（MIT），谁都能查、也能自己部署。'
 /** 「分享给朋友」发出去的一句话（后面跟站点链接） */
-export const SHARE_TEXT = '识字卡片：给 2–4 岁宝宝的看图听音认知卡片，256 张卡、真实照片 + 插画 + 中英文例句，点一下就朗读。免费、开源、离线、无广告。'
+export const SHARE_TEXT = '识字卡片：给 2–4 岁宝宝的看图听音认知卡片，256 张卡、真实照片 + 插画 + 中英文例句，点一下就朗读。免费、开源、无广告。'

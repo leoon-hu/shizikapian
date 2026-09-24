@@ -1,5 +1,4 @@
-import { computed, ref } from 'vue'
-import type { MediaProgress } from '@/composables/offline'
+import { ref } from 'vue'
 import { useSettings } from '@/composables/useSettings'
 import { INSTALL_HINT_FOREVER, INSTALL_HINT_SNOOZE_MS } from '@/composables/installHint'
 
@@ -10,34 +9,10 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 /**
- * 模块级单例：安装与离线状态，给首页的安装提示条（C5）与家长设置页的「离线与安装」一行用。
- * 写入方：main.ts（注册 SW 的回调、beforeinstallprompt / appinstalled）、useOffline.ts（图片和发音的后台下载），这里只放状态与 install()。
+ * 模块级单例：安装状态，给首页的安装提示条（C5）与家长设置页的「安装到主屏幕」一节（P7）用。
+ * 写入方：main.ts（beforeinstallprompt / appinstalled），这里只放状态与 install()。
  */
 
-/**
- * Service Worker（页面外壳的离线包）的状态，main.ts 写：unsupported = 这个浏览器存不了（没有 Service Worker：微信内置浏览器、
- * 无痕模式、file://）；installing = 还没装好；ready = 已装好在接管页面；failed = 首次安装失败且重试用完。
- * 已经有 SW 在接管页面的（装过了）一打开就是 ready。
- */
-const swSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && location.protocol !== 'file:'
-const swState = ref<'unsupported' | 'installing' | 'ready' | 'failed'>(
-  !swSupported ? 'unsupported' : navigator.serviceWorker.controller ? 'ready' : 'installing',
-)
-/** 图片和发音（离线包的大头）在后台下到哪了，useOffline.ts 写；还没看过为 null */
-const media = ref<MediaProgress | null>(null)
-/**
- * 离线包整体的状态（设置页 P7 一行、首页版本卡片）：SW 装好 + 图片和发音全部下好才是 ready（断网也能用）；
- * 下载停了（断网 / 连续失败）又没下全是 failed（联网后会接着下）；其余是 installing。
- */
-const offlineState = computed<'unsupported' | 'installing' | 'ready' | 'failed'>(() => {
-  if (swState.value === 'unsupported' || swState.value === 'failed') return swState.value
-  const m = media.value
-  const complete = !!m && m.total > 0 && m.cached >= m.total
-  if (complete) return swState.value === 'ready' ? 'ready' : 'installing'
-  return m?.stopped ? 'failed' : 'installing'
-})
-/** 下载进度（图片和发音，个数），还没开始为 null */
-const progress = computed(() => (media.value && media.value.total > 0 ? { done: media.value.cached, total: media.value.total } : null))
 /** Android Chrome 的安装提示事件；用过、装好了或不支持为 null，首页提示条与设置页据此显示 / 隐藏「安装」按钮 */
 const installPrompt = ref<Event | null>(null)
 
@@ -81,5 +56,5 @@ async function install(): Promise<'accepted' | 'dismissed'> {
 }
 
 export function usePwa() {
-  return { swState, media, offlineState, progress, installPrompt, isStandalone, isIOS, isIPad, isIOSSafari, isInApp, isTouch, install }
+  return { installPrompt, isStandalone, isIOS, isIPad, isIOSSafari, isInApp, isTouch, install }
 }

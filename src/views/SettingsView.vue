@@ -40,7 +40,7 @@ function pickDisplay(mode: DisplayMode) {
 }
 
 /**
- * 「离线与安装」的安装部分（P7）：拿到安装事件给「安装到主屏幕」按钮，其它环境给「查看步骤」，
+ * 「安装到主屏幕」（P7）：拿到安装事件给「安装到主屏幕」按钮，其它环境给「查看步骤」，
  * 弹与首页提示条（C5）相同的步骤面板；判断顺序与 C5 一致（内置浏览器先于 iOS）
  */
 const installKind = computed<InstallHintKind | null>(() => {
@@ -54,22 +54,6 @@ const stepsOpen = ref(false)
 /** 「联系站长」与「分享给朋友」（C6 的第二入口）：与首页页脚同一个面板 */
 const contactOpen = ref(false)
 const { share } = useShare()
-
-/** 离线包状态一行（P7）：下载中带百分比，家长知道是在下而不是卡住了 */
-const offlineText = computed(() => {
-  const p = pwa.progress.value
-  const percent = p && p.total ? `，已完成 ${Math.min(99, Math.floor((p.done / p.total) * 100))}%` : ''
-  switch (pwa.offlineState.value) {
-    case 'ready':
-      return '离线包已就绪，没有网也能用'
-    case 'installing':
-      return `正在下载图片和发音（约 20 MB${percent}），第一次请保持打开一会儿；中途关掉，下次会接着下`
-    case 'failed':
-      return '下载中断了，联网后会自动接着下；一直这样的话，关掉再打开一次'
-    default:
-      return '这个浏览器存不了离线包（微信内置浏览器、无痕模式都这样），只能联网用；用 Safari / Chrome 打开这个网址就能离线，也能装到主屏幕'
-  }
-})
 
 const hidden = computed(() => new Set(settings.hiddenCategories))
 const shownCount = computed(() => categories.length - hidden.value.size)
@@ -86,7 +70,7 @@ function toggleCategory(cat: Category) {
   }
 }
 
-/** 照片出处（P10）：CC BY / CC BY-SA 要求在用到照片的地方能看到作者与许可；展开时才读 credits.json，离线包里也有 */
+/** 照片出处（P10）：CC BY / CC BY-SA 要求在用到照片的地方能看到作者与许可；展开时才读 credits.json，它在预缓存里、没网也能打开 */
 interface Credit {
   file: string
   license: string
@@ -205,18 +189,14 @@ function back() {
 
     <!-- 放在分类列表前面：家长第一次最需要看的是它，别被 17 行开关压到页底（P7） -->
     <section class="group">
-      <h2 class="group__title">离线与安装</h2>
-      <p class="status">
-        <span class="status__dot" :class="{ 'status__dot--ok': pwa.offlineState.value === 'ready' }" />
-        {{ offlineText }}
-      </p>
+      <h2 class="group__title">安装到主屏幕</h2>
       <p v-if="!installKind" class="group__hint">已安装到主屏幕。</p>
       <button v-else-if="installKind === 'prompt'" type="button" class="install" @click="pwa.install()">安装到主屏幕</button>
       <template v-else>
-        <p class="group__hint">装到主屏幕后从桌面图标打开就是全屏、离线的，孩子自己就能打开。</p>
+        <p class="group__hint">装到主屏幕后从桌面图标打开就是全屏的，孩子自己就能打开。</p>
         <button type="button" class="install" @click="stepsOpen = true">查看步骤</button>
         <p v-if="installKind === 'ios'" class="group__hint">
-          主屏幕里的是独立的一份，设置要在那里重新选（离线包可能也要再下一次）；只在 Safari 里用的话，一周不打开会被系统清掉。
+          主屏幕里的是独立的一份，设置要在那里重新选；只在 Safari 里用的话，一周不打开会被系统清掉。
         </p>
       </template>
       <p class="group__hint">没有声音？先把音量键调大（iPhone / iPad 的静音拨键不影响本应用）。</p>
@@ -415,26 +395,6 @@ function back() {
   opacity: 0.4;
 }
 
-.status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 15px;
-  line-height: 1.5;
-  margin-bottom: 12px;
-}
-.status__dot {
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--c-line);
-  border: 1px solid var(--c-text-light);
-}
-.status__dot--ok {
-  background: #6cc070;
-  border-color: #6cc070;
-}
 .install {
   min-height: 48px;
   margin-bottom: 14px;

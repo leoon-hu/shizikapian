@@ -51,7 +51,7 @@ async function primary() {
     <img class="hint__icon" :src="iconSrc" alt="" draggable="false" />
     <div class="hint__body">
       <strong class="hint__title">安装 识字卡片</strong>
-      <span class="hint__text">全屏打开，没有网也能用</span>
+      <span class="hint__text">像 App 一样全屏打开，不用再找网址</span>
     </div>
     <button type="button" class="hint__install" @click="primary">{{ kind === 'prompt' ? '安装' : '怎么做' }}</button>
     <button type="button" class="hint__close" aria-label="关闭安装提示" @click="dismiss">

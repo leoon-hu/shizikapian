@@ -51,7 +51,7 @@ const og = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
   </g>
   <text x="560" y="300" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="112" font-weight="700" fill="#3d2c1e">识字卡片</text>
   <text x="564" y="380" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="44" font-weight="600" fill="#716254">看图 · 听音 · 学说话</text>
-  <text x="564" y="450" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="34" fill="#716254">2–4 岁 · 中英文 · 离线 · 免费</text>
+  <text x="564" y="450" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="34" fill="#716254">2–4 岁 · 中英文 · 免费</text>
 </svg>`
 
 const outputs = [

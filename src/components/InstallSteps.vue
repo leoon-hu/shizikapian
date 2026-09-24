@@ -20,7 +20,7 @@ const steps = computed(() => installSteps(props.kind, { iosSafari: pwa.isIOSSafa
     <div class="mask" @click.self="emit('close')">
       <div class="sheet" role="dialog" aria-modal="true" aria-label="添加到主屏幕">
         <h3 class="sheet__title">添加到主屏幕</h3>
-        <p class="sheet__desc">全屏打开，没有网也能用。</p>
+        <p class="sheet__desc">像 App 一样全屏打开，不用再找网址。</p>
         <ol class="steps">
           <li v-for="(s, i) in steps" :key="s.text" class="step">
             <span class="step__n">{{ i + 1 }}</span>

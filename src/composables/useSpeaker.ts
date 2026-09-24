@@ -2,7 +2,6 @@ import type { Card, Category, PromptId } from '@/content'
 import { useSettings } from './useSettings'
 import { createSpeaker } from './speaker'
 import { planCard, planCategory, planDone, planQuiz, preloadList, type SpeechItem } from './speechPlan'
-import { usePwa } from './usePwa'
 
 /**
  * 全局唯一的朗读器：队列 / 打断 / 看门狗的逻辑在 speaker.ts（可单测），这里只做 DOM 适配——
@@ -148,15 +147,14 @@ if (typeof document !== 'undefined') {
 const preloaded = new Set<string>()
 let pending: string[] = []
 let workers = 0
-/** 同时最多开几条连接预热：多了会和正在读的分类名、还在装的离线包抢同一批连接，首次运行点方砖要等一秒才出声 */
+/** 同时最多开几条连接预热：多了会和正在读的分类名抢同一批连接，首次运行点方砖要等一秒才出声 */
 const PRELOAD_CONCURRENCY = 2
 /**
- * 把一个分类的音频提前 fetch 一遍暖缓存（SW 的媒体路由支持 Range，不需要 blob URL；取过的它也顺手存进离线缓存）。
- * 离线包已备齐 = 全部音频都在缓存里，不用再取；还没备齐（首次运行、后台还在下、不支持 SW）时按顺序小并发地取，
- * 换分类就丢掉上一分类没取完的。file:// 下 fetch 会失败，忽略
+ * 进一个分类时把它的音频提前 fetch 一遍暖缓存（S5）：图片和发音只在页面用到时才下（4.3），打开哪个分类就只取哪个分类的。
+ * 经 SW 的媒体路由取：缓存里有的直接回（不费流量），没有的取下来顺手存进缓存；路由支持 Range，不需要 blob URL。
+ * 按顺序小并发地取，换分类就丢掉上一分类没取完的。file:// 下 fetch 会失败，忽略
  */
 function preload(cat: Category) {
-  if (usePwa().offlineState.value === 'ready') return
   const settings = useSettings()
   pending = preloadList(cat, settings.display, { sentences: settings.sentences }).filter((u) => !preloaded.has(u))
   while (workers < PRELOAD_CONCURRENCY && pending.length) {

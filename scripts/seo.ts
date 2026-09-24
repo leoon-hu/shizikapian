@@ -2,7 +2,7 @@
  * SEO 静态文件：应用本身是 hash 路由的单页，搜索引擎只能看到根页面，而 #app 在脚本跑起来之前只有一段启动页文字。
  * 这个脚本在构建 / 起 dev 之前（package.json 的 prebuild / predev）往 public/ 写：
  *   cards.html   不用 JS 的静态页——17 个分类、全部卡片的词与例句、插画（带 alt），搜索引擎与不跑 JS 的爬虫（百度）
- *                在这一页能读到全部内容，页面上再链回应用；进离线包（glob 会扫到 html）
+ *                在这一页能读到全部内容，页面上再链回应用；进预缓存（glob 会扫到 html）
  *   robots.txt   允许全部；设了站点地址就带 Sitemap 一行
  *   sitemap.xml  只在设了站点地址时生成（sitemap 需要绝对地址）
  * 站点地址来自 .env 的 VITE_SITE_URL（不进仓库，不带末尾斜杠，如 https://example.com/shizikapian）；
@@ -23,7 +23,7 @@ const publicDir = join(root, 'public')
 const NAME = '识字卡片'
 const TAGLINE = '看图、听音、学说话'
 const DESCRIPTION =
-  '给 2–4 岁幼儿的看图听音认知卡片：17 个分类、256 张卡，每张有真实照片、插画、中文 / 英文词和一句例句，点一下就朗读；纯离线、不联网、不注册、没有广告，可添加到手机 / iPad 主屏幕。'
+  '给 2–4 岁幼儿的看图听音认知卡片：17 个分类、256 张卡，每张有真实照片、插画、中文 / 英文词和一句例句，点一下就朗读；免费、不注册、没有广告，可添加到手机 / iPad 主屏幕。'
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 const total = categories.reduce((n, c) => n + c.cards.length, 0)

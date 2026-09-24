@@ -7,7 +7,6 @@ import { usePwa } from '@/composables/usePwa'
 import { useSettings } from '@/composables/useSettings'
 import { INSTALL_HINT_FOREVER } from '@/composables/installHint'
 import { trackBackNavigation } from '@/composables/analytics'
-import { setupOffline } from '@/composables/useOffline'
 import '@/styles/tokens.css'
 import '@/styles/base.css'
 
@@ -38,21 +37,27 @@ createApp(App).use(router).mount('#app')
 // 访问统计（需求 4.6）：返回键那一下 tracker 自己不记，这里补；没加统计标签时什么都不做
 trackBackNavigation()
 
-// 离线缓存：Service Worker 只预缓存页面外壳（几秒装好），图片和发音由页面在后台下（useOffline.ts，需求 4.3）。
+// Service Worker 只预缓存页面外壳（几秒装好）；图片和发音在页面用到时才下，SW 顺手存进缓存（src/sw.ts，需求 4.3）。
 // 新版本装好后不立刻 reload（会打断正在看卡片的孩子），
 // 记下来，等回到首页、且没在朗读时再切换——首页本来就是每次打开的起点，刷新对孩子无感（家长在页脚点「检查更新」的除外）
 let applyUpdate: ((reload?: boolean) => Promise<void>) | null = null
 /**
- * 首次安装失败（某个文件重试几次都没下下来、中途断网）时浏览器会把注册整个丢掉，本页再也不会重试，
- * 设置页就一直停在「正在下载」。这里按退避重新注册几次，网络恢复时也立刻再试一次；
+ * 首次安装失败（某个文件重试几次都没下下来、中途断网）时浏览器会把注册整个丢掉，本页再也不会重试。
+ * 这里按退避重新注册几次，网络恢复时也立刻再试一次；
  * 已下好的文件 Workbox 会跳过，重试只补缺的。要重新调 registerSW 而不是裸调 register：
  * 旧的 workbox-window 实例听的是已作废的注册，收不到新注册的 installed 事件
  */
 const RETRY_DELAYS = [5_000, 20_000, 60_000]
+/**
+ * SW 的状态（只给下面的重试用）：unsupported = 这个浏览器没有 Service Worker（微信内置浏览器、无痕模式、file://）；
+ * installing = 还没装好；ready = 已装好在接管页面（装过的一打开就是）；failed = 首次安装失败、等重试
+ */
+let swState: 'unsupported' | 'installing' | 'ready' | 'failed' =
+  !('serviceWorker' in navigator) || location.protocol === 'file:' ? 'unsupported' : navigator.serviceWorker.controller ? 'ready' : 'installing'
 let attempts = 0
 let retryTimer: number | undefined
 function scheduleRetry() {
-  pwa.swState.value = 'failed'
+  swState = 'failed'
   if (retryTimer !== undefined || attempts >= RETRY_DELAYS.length) return
   retryTimer = window.setTimeout(() => {
     retryTimer = undefined
@@ -61,12 +66,12 @@ function scheduleRetry() {
   }, RETRY_DELAYS[attempts])
 }
 function startSW() {
-  if (pwa.swState.value === 'unsupported') return
-  if (pwa.swState.value !== 'ready') pwa.swState.value = 'installing'
+  if (swState === 'unsupported') return
+  if (swState !== 'ready') swState = 'installing'
   const update = registerSW({
     immediate: true,
     onOfflineReady() {
-      pwa.swState.value = 'ready'
+      swState = 'ready'
     },
     onNeedRefresh() {
       applyUpdate = update
@@ -81,25 +86,23 @@ function startSW() {
     onRegisterError(err: unknown) {
       // 取 sw.js 失败（弱网、服务器 5xx）是 TypeError，值得重试；其它（无痕模式的 SecurityError、协议不对）是环境问题
       if (err instanceof TypeError) scheduleRetry()
-      else pwa.swState.value = 'unsupported'
+      else swState = 'unsupported'
     },
   })
 }
 startSW()
 window.addEventListener('online', () => {
-  if (pwa.swState.value !== 'failed') return
+  if (swState !== 'failed') return
   if (retryTimer !== undefined) {
     clearTimeout(retryTimer)
     retryTimer = undefined
   }
   startSW()
 })
-// SW 接管页面（首次装好 / 新版本换上）：外壳离线可用了
+// SW 接管页面（首次装好 / 新版本换上）
 navigator.serviceWorker?.addEventListener('controllerchange', () => {
-  pwa.swState.value = 'ready'
+  swState = 'ready'
 })
-// 图片和发音在后台下（设置页与首页版本卡片显示进度）
-setupOffline()
 router.afterEach((to) => {
   if (to.name === 'home' && applyUpdate && document.visibilityState === 'visible' && !useSpeaker().busy.value) {
     const run = applyUpdate
