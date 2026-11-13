@@ -98,6 +98,10 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 
 <img src="public/wechat-qrcode.jpg" width="200" alt="作者微信二维码">
 
+支持赞助作者，继续优化本应用体验（站内「联系站长」里是同一张赞助码）：
+
+<img src="public/wechat-pay.jpg" width="200" alt="微信支付赞助码">
+
 ## 素材
 
 - **插画**（`public/images/`，273 个 SVG）：[Twemoji](https://github.com/jdecked/twemoji)（CC-BY 4.0），`npm run images` 从 `@twemoji/svg` 拷出；颜色、形状、数字、草由 `scripts/draw.ts` 自绘。
