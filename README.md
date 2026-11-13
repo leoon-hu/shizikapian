@@ -56,7 +56,7 @@ npm run screenshots  # npm run dev 之后：无头 Chrome 模拟 iPhone（真触
 
 设置只存在本机（localStorage）。页脚有防孩子误退出的提示：iPhone / iPad 用「引导式访问」，Android 用「屏幕固定」；还有一个「全部卡片清单」链接（`cards.html`，一页网页，家长过一遍词和例句用）。
 
-首页方砖下面和设置页页脚都写着一句「开源」说明（免费、无广告、不用注册、不收集个人信息；代码全部以 MIT 开源，谁都能查、能自己部署）并链到本仓库；「分享给朋友」一键调系统分享面板（微信里教用右上角菜单，电脑上复制一段话 + 链接）；「联系站长」弹作者微信二维码。
+首页方砖下面和设置页页脚都写着一句「开源」说明（免费、无广告、不用注册、不收集个人信息；代码全部以 MIT 开源，谁都能查、能自己部署）并链到本仓库；「分享给朋友」一键调系统分享面板（微信里教用右上角菜单，电脑上复制一段话 + 链接）；「联系站长」弹作者微信二维码，旁边是自愿赞助用的微信支付码。
 
 ## 内容
 
@@ -127,11 +127,11 @@ src/
     usePwa.ts / useWakeLock.ts
   views/                Home（分类方砖）/ Cards（卡片）/ Quiz（小测验）/ Settings（家长设置）
   components/           BigButton（孩子用的大按钮）/ CategoryTile / AppIcon / InstallHint + InstallSteps（安装提示）/ ContactSheet（联系站长）/ SharePanel（分享给朋友）/ AppVersion（首页页脚的版本卡片）
-  sites.ts              站点地址、源码仓库、「开源」一句、分享文案、页脚「更多应用」里另外三个站的名单、站长微信二维码
+  sites.ts              站点地址、源码仓库、「开源」一句、分享文案、页脚「更多应用」里另外三个站的名单、站长微信二维码与赞助码
   styles/               tokens.css 设计变量；base.css 防误触与全局样式
   sw.ts                 自写的 Service Worker：预缓存页面外壳；图片和发音按需缓存（先用缓存、后台更新）+ Range 请求（iOS 才播得出缓存里的 mp3）
 scripts/                images / photos / audio / icons / seo 五个生成脚本，screenshots.mjs 截 README 预览图 → screenshots/
-public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-qrcode.jpg 作者微信二维码
+public/                 images/ photos/ audio/ icons/ 生成的素材；wechat-qrcode.jpg 作者微信二维码、wechat-pay.jpg 微信支付赞助码
 ```
 
 SEO：应用是 hash 路由的单页，所以根页面带完整的标题 / 描述 / Open Graph / JSON-LD 和一段脚本跑起来前的静态内容，另有一页不用 JS 的 `cards.html` 列出全部卡片的词与例句（构建前由 `scripts/seo.ts` 生成，不进仓库）。在 `.env` 里放 `VITE_SITE_URL=https://你的域名/路径`（不带末尾斜杠），构建时会据它生成 canonical、`og:image` 与 `sitemap.xml`。
